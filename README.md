@@ -1,4 +1,4 @@
-# [your app name here]
+# PAWmodoro :3
 
 CodePath WEB103 Final Project
 
