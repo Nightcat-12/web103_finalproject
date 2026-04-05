@@ -24,9 +24,9 @@ Reference the Writing User Stories final project guide in the course portal for 
 
 4. As a player, I want to spend my earned coins on items in the Paw-Mart so that I can personalize my virtual cat's room.
 
-5. 
+5. As a student, I want to edit tasks before or during my splits so that I can personalize them if I change my mind about the task.
 
-6. 
+6. As a student, I want different pages for the Paw-Mart and the Pawmodoro clock so I am not distracted by the possible purchases while studying.
 
 7. 
 
