@@ -28,10 +28,11 @@ Reference the Writing User Stories final project guide in the course portal for 
 
 6. As a student, I want different pages for the Paw-Mart and the Pawmodoro clock so I am not distracted by the possible purchases while studying.
 
-7. 
+7. As a student who struggles to focus in noisy or distracting environments, I want to choose from a curated list of white noise and ambient sounds that I can adjust in volume, so that I can stay focused throughout my Pomodoro sessions.
 
-8. 
+8. As a worker, I want to a list that keep tracks of my completed task so that I can manage my weekly accomplishments.
 
-9. 
+9. As a student, I want a graph that analyze my study habits so that I know which time of day is best for studying.
+
 
 10.  
