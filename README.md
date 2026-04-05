@@ -18,9 +18,9 @@ Designed and developed by: Grecia Osorio, Brandon Budhan, Divya Ganesh, An Lam
 
 ## Tech Stack
 
-Frontend:
+Frontend: React, Material UI
 
-Backend:
+Backend: Express, PostgreSQL
 
 ## Features
 
