@@ -34,5 +34,4 @@ Reference the Writing User Stories final project guide in the course portal for 
 
 9. As a student, I want a graph that analyze my study habits so that I know which time of day is best for studying.
 
-
-10.  
+10. As a student, I want to customize the aesthetics of my workspace to my liking so that I enjoy my studying more
