@@ -2,7 +2,7 @@
 
 CodePath WEB103 Final Project
 
-Designed and developed by: Grecia Osorio, Brandon Budhan, Divya Ganesh, An Lam
+Designed and developed by: Grecia Osorio, Brandon Budhan, Divya Ganesh, Lan Doan
 
 🔗 Link to deployed app:
 
