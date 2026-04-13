@@ -10,14 +10,14 @@ Reference the Creating an Entity Relationship Diagram final project guide in the
 
 ## Wireframe 1: Home Page
 
-<img src="./wireframes/homePage.png">
+<img src="./assets/homePage.png">
 
 ## Wireframe 2: Shop Page
 
-<img src="./wireframes/shopInvPage.png">
+<img src="./assets/shopInvPage.png">
 
 ## Wireframe 3: User Profile Page
 
-<img src="./wireframes/userProfilePage.png">
+<img src="./assets/userProfilePage.png">
 
  
