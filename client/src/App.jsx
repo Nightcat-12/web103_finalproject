@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Box from '@mui/material/Box'
 import './App.css'
 import Typography from '@mui/material/Typography'
@@ -7,11 +7,45 @@ import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import ShoppingCart from '@mui/icons-material/ShoppingCart';
 import IconButton from '@mui/material/IconButton'
+import Button from '@mui/material/Button'
+import { auth, provider } from './firebase.js'
+import { getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect } from 'firebase/auth'
 
 function App() {
 
+  const [token, setToken] = useState('')
+  const [user, setUser] = useState('')
+
+  useEffect(() => {
+    getRedirectResult(auth).then(result => {
+      
+      if (result) {
+
+        const credential = GoogleAuthProvider.credentialFromResult(result)
+        const token = credential.accessToken
+        const user = result.user
+        
+        console.log(token)
+        console.log(user)
+      }
+    }).catch((error) => {
+      console.error("Error signing in: ", error.message)
+    })
+  }, [])
+
+  useEffect(() => {
+    console.log(auth.currentUser)
+  }, [auth])
+
+  const handleLogin = () => {
+    signInWithRedirect(auth, provider)
+    }
+  
+
+
   return (
     <Box>
+      
       <AppBar position="static">
         <Toolbar>
           <Stack direction="row" sx={{width: "100%", alignItems: "center", justifyContent: "center"}}>
@@ -29,6 +63,10 @@ function App() {
       <IconButton aria-label='Shop'>
         <ShoppingCart/>
       </IconButton>
+
+      <Button onClick={handleLogin}>
+        Sign in with Google
+      </Button>
 
     </Box>
   )
