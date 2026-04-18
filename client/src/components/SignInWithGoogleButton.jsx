@@ -1,10 +1,12 @@
 import { useContext } from "react";
 import AuthContext from "../contexts/AuthContext.js";
 import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import GoogleIcon from '@mui/icons-material/Google';
+import Stack from "@mui/material/Stack";
 
 export default function SignInWithGoogleButton() {
-
-    const {user, handleLogin, handleLogout} = useContext(AuthContext)
+	const { user, handleLogin, handleLogout } = useContext(AuthContext);
 
 	return (
 		<>
@@ -14,7 +16,12 @@ export default function SignInWithGoogleButton() {
 				</Button>
 			) : (
 				<Button onClick={handleLogin} variant="contained">
-					Sign in with Google
+					<Stack direction="row" spacing={1}>
+						<GoogleIcon/>
+						<Typography>
+							Sign in with Google
+						</Typography>
+					</Stack>
 				</Button>
 			)}
 		</>

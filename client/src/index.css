@@ -50,20 +50,33 @@
   }
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  /* border-inline: 1px solid var(--border); */
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+}
+
+#root > * {
+  width: min(100%, 1100px);
   min-height: 100svh;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
   box-sizing: border-box;
+  padding: 24px;
 }
 
 h1,
