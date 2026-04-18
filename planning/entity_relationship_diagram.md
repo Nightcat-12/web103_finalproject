@@ -23,3 +23,72 @@ Reference the Creating an Entity Relationship Diagram final project guide in the
 | ... | ... | ... | -->
 
 <img src="./assets/ERD.png"/>
+
+```
+erDiagram
+  USERS {
+    string uid PK
+    string name
+    string profilePicture
+    int coins
+    datetime createdAt
+  }
+
+  CATS {
+    int id PK
+    string userId FK
+    string name
+    string image
+    int energy
+  }
+
+  POMODORO_PROFILES {
+    int id PK
+    string userId FK
+    string name
+    int timeOn
+    int timeBreak
+    int timeLongBreak
+    boolean isDefault
+  }
+
+  SHOP_ITEMS {
+    int id PK
+    string name
+    string image
+    string category
+    int price
+  }
+
+  INVENTORY {
+    int id PK
+    string userId FK
+    int shopItemId FK
+    int quantity
+    boolean equipped
+    datetime acquiredAt
+  }
+
+  TASKS {
+    int id PK
+    string userId FK
+    string title
+    boolean completed
+    datetime createdAt
+    datetime completedAt
+  }
+
+  %% Relationships
+  USERS ||--|| CATS : has
+  USERS ||--o{ POMODORO_PROFILES : saves
+  USERS ||--o{ INVENTORY : owns
+  SHOP_ITEMS ||--o{ INVENTORY : appears_in
+  USERS ||--o{ TASKS : tracks
+
+%% || = exactly one
+%% o{ = zero or many
+%% |{ = one or many
+%% o| = zero or one
+%% PK = Primary Key
+%% FK = Foreign Key
+```
