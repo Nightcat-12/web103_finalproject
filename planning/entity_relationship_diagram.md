@@ -24,6 +24,7 @@ Reference the Creating an Entity Relationship Diagram final project guide in the
 
 <img src="./assets/ERD.png"/>
 
+---
 ```
 erDiagram
   USERS {
@@ -50,6 +51,15 @@ erDiagram
     int timeBreak
     int timeLongBreak
     boolean isDefault
+  }
+
+  STUDY_SESSIONS {
+    int id PK
+    string userId FK
+    int profileId FK
+    datetime startTime
+    datetime endTime
+    int coinsEarned
   }
 
   SHOP_ITEMS {
