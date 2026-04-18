@@ -18,6 +18,8 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Splash from './pages/Splash/index.jsx'
 import Layout from './pages/Layout.jsx/index.jsx'
 import Home from './pages/Home/index.jsx'
+import Profile from './pages/Profile/index.jsx'
+import Shop from './pages/Shop/index.jsx'
 
 function App() {
 
@@ -30,9 +32,11 @@ function App() {
     <ThemeProvider theme={theme}>
       <BrowserRouter>
         <Routes>
-          <Route path='/' element={<Splash/>}/>
-          <Route path='/home' element={<Layout/>}>
+          <Route path='/splash' element={<Splash/>}/>
+          <Route path='/' element={<Layout/>}>
             <Route index element={<Home/>}/>
+            <Route path="profile" element={<Profile/>}/>
+            <Route path="shop" element={<Shop/>}/>
           </Route>
         </Routes>
       </BrowserRouter>

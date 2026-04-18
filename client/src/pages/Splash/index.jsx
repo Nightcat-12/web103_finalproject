@@ -5,6 +5,7 @@ import Stack from "@mui/material/Stack";
 import { useContext, useEffect } from "react";
 import AuthContext from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import pawmodoroIcon from '/pawmodoro.png'
 
 export default function Splash() {
 
@@ -13,7 +14,7 @@ export default function Splash() {
 
     useEffect(() => {
         if (user) {
-            navigate('/home')
+            navigate('/')
         }
     }, [user, navigate])
 
@@ -29,7 +30,10 @@ export default function Splash() {
 				px: 2,
 			}}
 		>
-			<Typography variant="h1">Pawmodoro</Typography>
+            <Stack direction="row" spacing={2} sx={{justifyContent: "center", alignItems: "center"}}>
+                <Box component="img" src={pawmodoroIcon} sx={{width: "10em"}}/>
+			    <Typography variant="h1">Pawmodoro</Typography>
+            </Stack>
 
 			<Stack
 				justifyContent="center"

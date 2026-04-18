@@ -5,7 +5,7 @@ import useAuthRedirect from "../../hooks/useAuthRedirect";
 
 export default function Layout() {
 
-    useAuthRedirect('/')
+    useAuthRedirect('/splash')
 
     return (
         <Box>
