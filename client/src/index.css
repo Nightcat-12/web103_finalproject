@@ -67,7 +67,8 @@ body {
 }
 
 #root > * {
-  width: min(100%, 1100px);
+  width: 100%;
+  max-width: none;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -75,7 +76,7 @@ body {
   align-items: center;
   text-align: center;
   box-sizing: border-box;
-  padding: 24px;
+  padding: 0;
 }
 
 h1,

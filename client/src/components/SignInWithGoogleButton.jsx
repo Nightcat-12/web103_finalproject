@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import GoogleIcon from '@mui/icons-material/Google';
 import Stack from "@mui/material/Stack";
 
-export default function SignInWithGoogleButton() {
+export default function SignInWithGoogleButton({ buttonSx = {} }) {
 	const { user, handleLogin, handleLogout } = useContext(AuthContext);
 
 	return (
@@ -15,10 +15,16 @@ export default function SignInWithGoogleButton() {
 					Sign out
 				</Button>
 			) : (
-				<Button onClick={handleLogin} variant="contained">
-					<Stack direction="row" spacing={1}>
+				<Button
+					onClick={handleLogin}
+					variant="contained"
+					sx={{
+						...buttonSx,
+					}}
+				>
+					<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
 						<GoogleIcon/>
-						<Typography>
+						<Typography sx={{ color: "inherit" }}>
 							Sign in with Google
 						</Typography>
 					</Stack>

@@ -5,40 +5,55 @@ import Stack from "@mui/material/Stack";
 import { useContext, useEffect } from "react";
 import AuthContext from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import pawmodoroIcon from '/pawmodoro.png'
+import pawmodoroIcon from "/pawmodoro.png";
 
 export default function Splash() {
+	const { user } = useContext(AuthContext);
+	const navigate = useNavigate();
 
-    const {user} = useContext(AuthContext)
-    const navigate = useNavigate()
-
-    useEffect(() => {
-        if (user) {
-            navigate('/')
-        }
-    }, [user, navigate])
+	useEffect(() => {
+		if (user) {
+			navigate("/");
+		}
+	}, [user, navigate]);
 
 	return (
 		<Box
 			sx={{
 				minHeight: "100svh",
+				width: "100vw",
+				maxWidth: "none",
+				alignSelf: "stretch",
 				display: "flex",
 				flexDirection: "column",
 				justifyContent: "center",
 				alignItems: "center",
 				gap: 3,
 				px: 2,
+				bgcolor: "primary.main",
+				color: "common.white",
+				"& .MuiTypography-root": {
+					color: "inherit",
+				},
 			}}
 		>
-            <Stack direction="row" spacing={2} sx={{justifyContent: "center", alignItems: "center"}}>
-                <Box component="img" src={pawmodoroIcon} sx={{width: "10em"}}/>
-			    <Typography variant="h1">Pawmodoro</Typography>
-            </Stack>
+			<Stack
+				direction="row"
+				spacing={2}
+				sx={{
+					justifyContent: "center",
+					alignItems: "center",
+					color: "inherit",
+				}}
+			>
+				<Box component="img" src={pawmodoroIcon} sx={{ width: "10em" }} />
+				<Typography variant="h1">Pawmodoro</Typography>
+			</Stack>
 
 			<Stack
 				justifyContent="center"
 				alignItems="center"
-				sx={{ width: "50%" }}
+				sx={{ width: "50%", color: "inherit", marginBottom: '2%',}}
 				spacing={3}
 			>
 				<Typography>Welcome to Pawmodoro!</Typography>
@@ -67,7 +82,21 @@ export default function Splash() {
 				</Typography>
 			</Stack>
 
-			<SignInWithGoogleButton />
+			<SignInWithGoogleButton
+				buttonSx={{
+					bgcolor: "common.white",
+					color: "primary.main",
+					"&:hover": {
+						bgcolor: "common.white",
+					},
+					"& .MuiSvgIcon-root": {
+						color: "inherit",
+					},
+					"& .MuiTypography-root": {
+						color: "inherit",
+					},
+				}}
+			/>
 		</Box>
 	);
 }
