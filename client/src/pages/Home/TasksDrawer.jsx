@@ -16,11 +16,14 @@ export default function TasksDrawer() {
 				}}
 				variant="contained"
 			>
-
-                Tasks
+				Tasks
 			</Button>
 
-			<Drawer open={open} onClose={() => setOpen(false)}>
+			<Drawer
+				open={open}
+				onClose={() => setOpen(false)}
+				sx={{ "& .MuiDrawer-paper": { backgroundColor: "primary.main", color: "white" } }}
+			>
 				<Stack
 					sx={{
 						width: "30vw",
@@ -28,17 +31,12 @@ export default function TasksDrawer() {
 						alignItems: "center",
 						padding: "20px",
 					}}
-                    spacing={2}
+					spacing={2}
 				>
 					<Typography variant="h5">Tasks</Typography>
-				    <Divider sx={{width: "80%"}}/>
+					<Divider color="white" sx={{ width: "80%", color: "white" }} />
 
-
-                    <Box>
-                        {/* @TODO: Implement Tasks Logic here */}
-                    </Box>
-
-
+					<Box>{/* @TODO: Implement Tasks Logic here */}</Box>
 				</Stack>
 			</Drawer>
 		</Box>
