@@ -20,6 +20,7 @@ import Layout from './pages/Layout.jsx/index.jsx'
 import Home from './pages/Home/index.jsx'
 import Profile from './pages/Profile/index.jsx'
 import Shop from './pages/Shop/index.jsx'
+import Testing from './pages/Testing/index.jsx'
 
 function App() {
 
@@ -37,6 +38,7 @@ function App() {
             <Route index element={<Home/>}/>
             <Route path="profile" element={<Profile/>}/>
             <Route path="shop" element={<Shop/>}/>
+            <Route path="dev" element={<Testing/>}/>
           </Route>
         </Routes>
       </BrowserRouter>
