@@ -59,6 +59,12 @@ body {
   margin: 0;
 }
 
+html.splash-page,
+html.splash-page body,
+html.splash-page #root {
+  background-color: #FC7474;
+}
+
 #root {
   min-height: 100svh;
   display: grid;

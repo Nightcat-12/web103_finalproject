@@ -20,6 +20,18 @@ export default function Splash() {
 		}
 	}, [user, navigate]);
 
+
+	// Change the background color to red for the splash page
+	useEffect(() => {
+		document.documentElement.classList.add("splash-page");
+		document.body.classList.add("splash-page");
+
+		return () => {
+			document.documentElement.classList.remove("splash-page");
+			document.body.classList.remove("splash-page");
+		};
+	}, []);
+
 	const signInButton = (
 		<SignInWithGoogleButton
 			buttonSx={{
@@ -42,9 +54,10 @@ export default function Splash() {
 		<Box
 			sx={{
 				minHeight: "100svh",
-				width: "100vw",
+				width: "100%",
 				maxWidth: "none",
 				alignSelf: "stretch",
+				boxSizing: "border-box",
 				display: "flex",
 				flexDirection: "column",
 				justifyContent: "center",
