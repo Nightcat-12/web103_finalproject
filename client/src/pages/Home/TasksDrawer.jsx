@@ -36,7 +36,10 @@ export default function TasksDrawer() {
 					<Typography variant="h5">Tasks</Typography>
 					<Divider color="white" sx={{ width: "80%", color: "white" }} />
 
-					<Box>{/* @TODO: Implement Tasks Logic here */}</Box>
+					<Box>
+                        {/* @TODO: Implement Tasks Logic here */}
+                    </Box>
+                    
 				</Stack>
 			</Drawer>
 		</Box>
