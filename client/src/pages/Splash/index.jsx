@@ -2,20 +2,41 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import SignInWithGoogleButton from "../../components/SignInWithGoogleButton";
 import Stack from "@mui/material/Stack";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import AuthContext from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import pawmodoroIcon from "/pawmodoro.png";
+import { AttentionSeeker } from "react-awesome-reveal";
 
 export default function Splash() {
 	const { user } = useContext(AuthContext);
 	const navigate = useNavigate();
+	const [isSignInHovered, setIsSignInHovered] = useState(false);
+	const [hoverAnimationKey, setHoverAnimationKey] = useState(0);
 
 	useEffect(() => {
 		if (user) {
 			navigate("/");
 		}
 	}, [user, navigate]);
+
+	const signInButton = (
+		<SignInWithGoogleButton
+			buttonSx={{
+				bgcolor: "common.white",
+				color: "primary.main",
+				"&:hover": {
+					bgcolor: "common.white",
+				},
+				"& .MuiSvgIcon-root": {
+					color: "inherit",
+				},
+				"& .MuiTypography-root": {
+					color: "inherit",
+				},
+			}}
+		/>
+	);
 
 	return (
 		<Box
@@ -46,14 +67,16 @@ export default function Splash() {
 					color: "inherit",
 				}}
 			>
-				<Box component="img" src={pawmodoroIcon} sx={{ width: "10em" }} />
+				<AttentionSeeker effect="bounce">
+					<Box component="img" src={pawmodoroIcon} sx={{ width: "10em" }} />
+				</AttentionSeeker>
 				<Typography variant="h1">Pawmodoro</Typography>
 			</Stack>
 
 			<Stack
 				justifyContent="center"
 				alignItems="center"
-				sx={{ width: "50%", color: "inherit", marginBottom: '2%',}}
+				sx={{ width: "50%", color: "inherit", marginBottom: "2%" }}
 				spacing={3}
 			>
 				<Typography>Welcome to Pawmodoro!</Typography>
@@ -82,21 +105,22 @@ export default function Splash() {
 				</Typography>
 			</Stack>
 
-			<SignInWithGoogleButton
-				buttonSx={{
-					bgcolor: "common.white",
-					color: "primary.main",
-					"&:hover": {
-						bgcolor: "common.white",
-					},
-					"& .MuiSvgIcon-root": {
-						color: "inherit",
-					},
-					"& .MuiTypography-root": {
-						color: "inherit",
-					},
+			<Box
+				sx={{ display: "inline-flex" }}
+				onMouseEnter={() => {
+					setIsSignInHovered(true);
+					setHoverAnimationKey((prev) => prev + 1);
 				}}
-			/>
+				onMouseLeave={() => setIsSignInHovered(false)}
+			>
+				{isSignInHovered ? (
+					<AttentionSeeker key={hoverAnimationKey} effect="tada" triggerOnce>
+						{signInButton}
+					</AttentionSeeker>
+				) : (
+					signInButton
+				)}
+			</Box>
 		</Box>
 	);
 }
