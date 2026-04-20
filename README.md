@@ -39,12 +39,17 @@ Stay in the zone with a timer that adapts to your workflow. Finish a task early?
 
 [gif goes here]
 
+### Custom Timer Profiles
+
+Work your way by setting up custom work and break intervals. Whether you want a quick 15-minute sprint or a 50-minute deep dive, you're in control—and the longer you choose to focus, the bigger your coin reward will be!
+
+[gif goes here]
+
 ### Earn Coins While You Work
 
 Turn your productivity into playtime! Get instant coin rewards just for checking off quick tasks, and earn massive payouts for successfully completing uninterrupted focus sessions.
 
 [gif goes here]
-
 
 ### The Paw-Mart Shop
 
@@ -55,12 +60,6 @@ Treat yourself (and your pet) with some stylish new furniture, rugs, and accesso
 ### Customize Your Cat's Room
 
 Create the perfect cozy space for your virtual pet. Mix and match the items you've purchased to decorate the room, instantly seeing your new design come to life on your dashboard.
-
-[gif goes here]
-
-### Custom Timer Profiles
-
-Work your way by setting up custom work and break intervals. Whether you want a quick 15-minute sprint or a 50-minute deep dive, you're in control—and the longer you choose to focus, the bigger your coin reward will be!
 
 [gif goes here]
 
