@@ -1,3 +1,4 @@
+import './dotenv.js'
 import pg from 'pg'
 
 const config = {

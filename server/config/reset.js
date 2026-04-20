@@ -1,86 +1,175 @@
 import { pool } from './database.js'
-import { fileURLToPath } from 'url'
-import path, { dirname } from 'path'
-import fs from 'fs'
-
-const currentPath = fileURLToPath(import.meta.url)
-const tripsFile = fs.readFileSync(path.join(dirname(currentPath), 'data.json'), 'utf8')
-const tripsData = JSON.parse(tripsFile)
-
-const createTripsTable = async () => {
- 
-
-  try {
-    await pool.query(createTripsTableQuery)
-    console.log('🎉 trips table created successfully')
-  } catch (err) {
-    console.error('⚠️ error creating trips table', err)
-    throw err
-  }
-}
-
-const createDestinationsTable = async () => {
-  
-
-  try {
-    await pool.query(createDestinationsTableQuery)
-    console.log('🎉 destinations table created successfully')
-  } catch (err) {
-    console.error('⚠️ error creating destinations table', err)
-    throw err
-  }
-}
-
-const createActivitiesTable = async () => {
- 
-
-  try {
-    await pool.query(createActivitiesTableQuery)
-    console.log('🎉 activities table created successfully')
-  } catch (err) {
-    console.error('⚠️ error creating activities table', err)
-    throw err
-  }
-}
-
-const createTripsDestinationsTable = async () => {
- 
-  try {
-    const res = await pool.query(createTripsDestinationsTableQuery)
-    console.log('🎉 trips_destinations table created successfully')
-  } catch (err) {
-    console.error('⚠️ error creating trips_destinations table', err)
-    throw err
-  }
-}
 
 const createUsersTable = async () => {
-  
+  const createUsersTableQuery = `
+    DROP TABLE IF EXISTS users CASCADE;
+
+    CREATE TABLE IF NOT EXISTS users (
+      uid TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      profilePicture TEXT,
+      coins INTEGER NOT NULL DEFAULT 0 CHECK (coins >= 0),
+      createdAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `
+
   try {
-    await pool.query(createUsersTableQuery)
-    console.log('🎉 users table created successfully')
+    const res = await pool.query(createUsersTableQuery)
+    console.log('✅ users table created successfully!')
   } catch (err) {
-    console.error('⚠️ error creating users table', err)
-    throw err
+    console.error(`⚠️ Error creating users table\n${err}`)
   }
 }
 
-const createTripsUsersTable = async () => {
- 
+const createCatsTable = async () => {
+  const createCatsTableQuery = `
+    DROP TABLE IF EXISTS cats CASCADE;
+
+    CREATE TABLE IF NOT EXISTS cats (
+      id SERIAL PRIMARY KEY,
+      userId TEXT NOT NULL UNIQUE REFERENCES users(uid) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      image TEXT,
+      energy INTEGER NOT NULL DEFAULT 100 CHECK (energy >= 0)
+    );
+  `
 
   try {
-    await pool.query(createTripsUsersTableQuery)
-    console.log('🎉 trips_users table created successfully')
+    const res = await pool.query(createCatsTableQuery)
+    console.log('✅ cats table created successfully!')
   } catch (err) {
-    console.error('⚠️ error creating trips_users table', err)
-    throw err
+    console.error(`⚠️ Error creating cats table\n${err}`)
   }
 }
 
-const seedTripsTable = async () => {
-   
+const createPomodoroProfilesTable = async () => {
+  const createPomodoroProfilesTableQuery = `
+    DROP TABLE IF EXISTS pomodoro_profiles CASCADE;
+
+    CREATE TABLE IF NOT EXISTS pomodoro_profiles (
+      id SERIAL PRIMARY KEY,
+      userId TEXT NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      timeOn INTEGER NOT NULL CHECK (timeOn > 0),
+      timeBreak INTEGER NOT NULL CHECK (timeBreak > 0),
+      timeLongBreak INTEGER NOT NULL CHECK (timeLongBreak > 0),
+      isDefault BOOLEAN NOT NULL DEFAULT FALSE
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS one_default_profile_per_user
+      ON pomodoro_profiles (userId)
+      WHERE isDefault = TRUE;
+  `
+
+  try {
+    const res = await pool.query(createPomodoroProfilesTableQuery)
+    console.log('✅ pomodoro_profiles table created successfully!')
+  } catch (err) {
+    console.error(`⚠️ Error creating pomodoro_profiles table\n${err}`)
+  }
+}
+
+const createStudySessionsTable = async () => {
+  const createStudySessionsTableQuery = `
+    DROP TABLE IF EXISTS study_sessions CASCADE;
+
+    CREATE TABLE IF NOT EXISTS study_sessions (
+      id SERIAL PRIMARY KEY,
+      userId TEXT NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
+      profileId INTEGER REFERENCES pomodoro_profiles(id) ON DELETE SET NULL,
+      startTime TIMESTAMPTZ NOT NULL,
+      endTime TIMESTAMPTZ,
+      coinsEarned INTEGER NOT NULL DEFAULT 0 CHECK (coinsEarned >= 0)
+    );
+  `
+
+  try {
+    const res = await pool.query(createStudySessionsTableQuery)
+    console.log('✅ study_sessions table created successfully!')
+  } catch (err) {
+    console.error(`⚠️ Error creating study_sessions table\n${err}`)
+  }
+}
+
+const createShopItemsTable = async () => {
+  const createShopItemsTableQuery = `
+    DROP TABLE IF EXISTS shop_items CASCADE;
+
+    CREATE TABLE IF NOT EXISTS shop_items (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      image TEXT,
+      category TEXT NOT NULL,
+      price INTEGER NOT NULL CHECK (price >= 0)
+    );
+  `
+
+  try {
+    const res = await pool.query(createShopItemsTableQuery)
+    console.log('✅ shop_items table created successfully!')
+  } catch (err) {
+    console.error(`⚠️ Error creating shop_items table\n${err}`)
+  }
+}
+
+const createInventoryTable = async () => {
+  const createInventoryTableQuery = `
+    DROP TABLE IF EXISTS inventory CASCADE;
+
+    CREATE TABLE IF NOT EXISTS inventory (
+      id SERIAL PRIMARY KEY,
+      userId TEXT NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
+      shopItemId INTEGER NOT NULL REFERENCES shop_items(id) ON DELETE CASCADE,
+      quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity >= 0),
+      equipped BOOLEAN NOT NULL DEFAULT FALSE,
+      acquiredAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (userId, shopItemId)
+    );
+  `
+
+  try {
+    const res = await pool.query(createInventoryTableQuery)
+    console.log('✅ inventory table created successfully!')
+  } catch (err) {
+    console.error(`⚠️ Error creating inventory table\n${err}`)
+  }
+}
+
+const createTasksTable = async () => {
+  const createTasksTableQuery = `
+    DROP TABLE IF EXISTS tasks CASCADE;
+
+    CREATE TABLE IF NOT EXISTS tasks (
+      id SERIAL PRIMARY KEY,
+      userId TEXT NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      completed BOOLEAN NOT NULL DEFAULT FALSE,
+      createdAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      completedAt TIMESTAMPTZ
+    );
+  `
+
+  try {
+    const res = await pool.query(createTasksTableQuery)
+    console.log('✅ tasks table created successfully!')
+  } catch (err) {
+    console.error(`⚠️ Error creating tasks table\n${err}`)
+  }
 }
 
 const seedDatabase = async () => {
-  
+  try {
+    await createUsersTable()
+    await createCatsTable()
+    await createPomodoroProfilesTable()
+    await createStudySessionsTable()
+    await createShopItemsTable()
+    await createInventoryTable()
+    await createTasksTable()
+    console.log('✅ database tables created successfully!')
+  } catch (err) {
+    console.error(`⚠️ Error seeding database\n${err}`)
+  }
 }
+
+seedDatabase()
