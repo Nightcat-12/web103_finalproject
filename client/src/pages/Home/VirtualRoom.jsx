@@ -104,8 +104,14 @@ export default function VirtualRoom() {
 		floor1: { img: "" },
 		floor2: { img: "" },
 		wall: { img: "" },
+        timer: {
+            minutes: 25,
+            seconds: 0
+        }
 	});
 	const [isTasksOpen, setIsTasksOpen] = useState(false);
+
+    const formatTime = (num) => num.toString().padStart(2, '0')
 
 	return (
 		<Box
@@ -156,7 +162,7 @@ export default function VirtualRoom() {
 							},
 						}}
 					>
-						25:00
+						{formatTime(items.timer.minutes)}:{formatTime(items.timer.seconds)}
 					</Typography>
 				</Box>
 
