@@ -1,49 +1,33 @@
-import { Box, Button, Divider, Drawer, Fab, Stack, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
-import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
+// client/src/pages/Home/TasksDrawer.jsx
+import { Box, Divider, Drawer, Stack, Typography } from "@mui/material";
 
-export default function TasksDrawer() {
-	const [open, setOpen] = useState(false);
+export default function TasksDrawer({ open = false, onClose = () => {}, sx = {} }) {
+    return (
+        <Drawer
+            open={open}
+            onClose={onClose}
+            sx={{
+                "& .MuiDrawer-paper": { backgroundColor: "primary.main", color: "white" },
+                ...sx,
+            }}
+        >
+            <Stack
+                sx={{
+                    width: "30vw",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    padding: "20px",
+                }}
+                spacing={2}
+            >
+                <Typography variant="h5">Tasks</Typography>
+                <Divider color="white" sx={{ width: "80%", color: "white" }} />
 
-	useEffect(() => {
-		console.log(open);
-	}, [open]);
-
-	return (
-		<Box>
-			<Fab
-				onClick={() => {
-					setOpen(!open);
-				}}
-				variant="contained"
-				color="primary"
-			>
-				<PlaylistAddCheckIcon/>
-			</Fab>
-
-			<Drawer
-				open={open}
-				onClose={() => setOpen(false)}
-				sx={{ "& .MuiDrawer-paper": { backgroundColor: "primary.main", color: "white" } }}
-			>
-				<Stack
-					sx={{
-						width: "30vw",
-						justifyContent: "center",
-						alignItems: "center",
-						padding: "20px",
-					}}
-					spacing={2}
-				>
-					<Typography variant="h5">Tasks</Typography>
-					<Divider color="white" sx={{ width: "80%", color: "white" }} />
-
-					<Box>
-                        {/* @TODO: Implement Tasks Logic here */}
-                    </Box>
-                    
-				</Stack>
-			</Drawer>
-		</Box>
-	);
+                <Box>
+					{/* @TODO: Implement Tasks Logic here */}
+				</Box>
+				
+            </Stack>
+        </Drawer>
+    );
 }
