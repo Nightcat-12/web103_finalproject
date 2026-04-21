@@ -1,5 +1,6 @@
-import { Box, Button, Divider, Drawer, Stack, Typography } from "@mui/material";
+import { Box, Button, Divider, Drawer, Fab, Stack, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
+import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
 
 export default function TasksDrawer() {
 	const [open, setOpen] = useState(false);
@@ -10,14 +11,15 @@ export default function TasksDrawer() {
 
 	return (
 		<Box>
-			<Button
+			<Fab
 				onClick={() => {
 					setOpen(!open);
 				}}
 				variant="contained"
+				color="primary"
 			>
-				Tasks
-			</Button>
+				<PlaylistAddCheckIcon/>
+			</Fab>
 
 			<Drawer
 				open={open}

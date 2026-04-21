@@ -10,7 +10,7 @@ export default function Layout() {
     return (
         <Box>
             <NavBar/>
-            <Box>
+            <Box sx={{marginTop: "3%"}}>
                 <Outlet/>
             </Box>
         </Box>
