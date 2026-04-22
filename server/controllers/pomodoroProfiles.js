@@ -1,6 +1,6 @@
 import { pool } from '../config/database.js'
 
-const geAllProfiles = async(req, res) => {
+const getAllProfiles = async(req, res) => {
     // gets all Profiles associated with a user
 }
 
