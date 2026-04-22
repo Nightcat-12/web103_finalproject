@@ -5,8 +5,9 @@ const router = express.Router()
 
 // == Users ==
 router.get('/:uid', UsersController.getUser)
-router.post('/', UsersController.createUser)
+router.post('/', UsersController.signInUser)
 router.patch('/:uid', UsersController.updateUser)
 router.delete('/:uid', UsersController.deleteUser)
 
 export default router
+

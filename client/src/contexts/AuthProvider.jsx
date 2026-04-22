@@ -6,7 +6,9 @@ import { auth, provider } from "../firebase.js";
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(true)
 
+  
   const handleLogin = async () => {
     // Made async to await the popup result
     try {
@@ -15,6 +17,30 @@ export function AuthProvider({ children }) {
       const signedInUser = result.user;
       // You can also get credentials if needed, e.g., result.credential.accessToken
       console.log("Popup sign-in successful! User:", signedInUser);
+      
+      const signInOnBackend = async () => {
+    
+        const options = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            "uid": signedInUser.uid,
+            "name": signedInUser.displayName,
+            "profilePicture": signedInUser.photoURL
+          })
+        }
+    
+        const results = await fetch('/api/users/', options)
+        const data = await results.json()
+
+        console.log("Is new user?: ", data.newUser)
+        setIsNewUser(data.newUser)
+      }
+
+      signInOnBackend()
+
       // The onAuthStateChanged listener will also fire and update your user state
     } catch (error) {
       console.error("Error during popup sign-in: ", error);
@@ -42,7 +68,7 @@ export function AuthProvider({ children }) {
 
   
   return (
-    <AuthContext.Provider value={{handleLogin, handleLogout, user, loading}}>
+    <AuthContext.Provider value={{handleLogin, handleLogout, user, loading, isNewUser}}>
         {children}
     </AuthContext.Provider>
   );

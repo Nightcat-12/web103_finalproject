@@ -36,13 +36,13 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 3000
 
 // Insert routes here
-app.use('/users', userRoutes)
-app.use('/cats', catsRoutes)
-app.use('/pomodoro_profiles', profilesRoutes)
-app.use('/shop_items', shopItemsRoutes)
-app.use('/inventory', inventoryRoutes)
-app.use('/sessions', sessionsRoutes)
-app.use('/tasks', tasksRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/cats', catsRoutes)
+app.use('/api/pomodoro_profiles', profilesRoutes)
+app.use('/api/shop_items', shopItemsRoutes)
+app.use('/api/inventory', inventoryRoutes)
+app.use('/api/sessions', sessionsRoutes)
+app.use('/api/tasks', tasksRoutes)
 
 app.listen(PORT, () => {
     console.log(`🍅 server listening on http://localhost:${PORT}`)
