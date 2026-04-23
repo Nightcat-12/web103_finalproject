@@ -19,11 +19,6 @@ export default function Testing() {
 
   return (
     <>
-      <Button variant="contained" onClick={() => setOpen(true)}>
-        Open Cat Select
-      </Button>
-
-      <CatSelect open={open} handleClose={()=>{setOpen(false)}}/>
     </>
   );
 }
