@@ -103,9 +103,9 @@ export default function VirtualRoom() {
 		},
 		floor1: { img: "" },
 		floor2: { img: "" },
-		wall: { img: "" },
+		wall: { img: "", },
         timer: {
-            minutes: 25,
+            minutes: 60,
             seconds: 0
         }
 	});
@@ -148,7 +148,7 @@ export default function VirtualRoom() {
 				<Slot label="Desk" sx={slots.desk} item={items.desk} />
 				<Slot label="Floor Item 1" sx={slots.floor1} />
 				<Slot label="Floor Item 2" sx={slots.floor2} />
-				<Slot label="Wall Item" sx={slots.wall} />
+				<Slot label="Wall Item" sx={slots.wall} item={items.wall} />
 				<Box sx={slots.timer}>
 					<Typography
 						variant="h2"
