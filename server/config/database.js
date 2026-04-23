@@ -9,7 +9,8 @@ const config = {
     database: process.env.PGDATABASE,
     ssl: {
       rejectUnauthorized: false
-    }
+    },
+    family: 4
 }
 
 export const pool = new pg.Pool(config)
