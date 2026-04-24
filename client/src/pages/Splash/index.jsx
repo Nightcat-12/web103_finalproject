@@ -20,7 +20,6 @@ export default function Splash() {
 		}
 	}, [user, navigate]);
 
-
 	// Change the background color to red for the splash page
 	useEffect(() => {
 		document.documentElement.classList.add("splash-page");
@@ -81,16 +80,25 @@ export default function Splash() {
 				}}
 			>
 				<AttentionSeeker effect="bounce">
-					<Box component="img" src={pawmodoroIcon} sx={{ width: "10em" }} />
+					<Box
+						component="img"
+						src={pawmodoroIcon}
+						sx={{ width: { xs: "5.5rem", sm: "7.5rem", md: "10rem" } }}
+					/>
 				</AttentionSeeker>
-				<Typography variant="h1">Pawmodoro</Typography>
+				<Typography
+					variant="h2"
+					sx={{ fontSize: { xs: "1.4rem", sm: "2rem", md: "3rem" } }}
+				>
+					Pawmodoro
+				</Typography>
 			</Stack>
 
 			<Stack
 				justifyContent="center"
 				alignItems="center"
-				sx={{ width: "50%", color: "inherit", marginBottom: "2%" }}
-				spacing={3}
+				sx={{ width: { xs: '92%', sm: '85%', md: '60%' }, color: "inherit", marginBottom: "2%" }}
+				spacing={2}
 			>
 				<Typography>Welcome to Pawmodoro!</Typography>
 				<Typography>

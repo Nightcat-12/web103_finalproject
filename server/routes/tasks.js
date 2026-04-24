@@ -4,7 +4,9 @@ import TasksController from '../controllers/tasks.js'
 const router = express.Router()
 
 // == Tasks ==
-router.get('/:uid', TasksController.getAllTasks)
-router.post('/', TasksController.get)
+router.get('/:uid', TasksController.getAllTasksFromUser)
+router.post('/', TasksController.createTask)
+router.patch('/:id', TasksController.updateTask)
+router.delete('/:id', TasksController.deleteTask)
 
 export default router

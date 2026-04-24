@@ -9,7 +9,6 @@ import shopItemsRoutes from './routes/shopItems.js'
 import inventoryRoutes from './routes/inventory.js'
 import sessionsRoutes from './routes/studySessions.js'
 import tasksRoutes from './routes/tasks.js'
-import tasks from './controllers/tasks.js'
 
 // import the router from your routes file
 
@@ -17,6 +16,11 @@ import tasks from './controllers/tasks.js'
 dotenv.config()
 
 const app = express()
+
+app.use((req, res, next) => {
+  console.log(req.method, req.url);
+  next();
+});
 
 app.use(express.json())
 app.use(cors())
@@ -32,7 +36,7 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 3000
 
 // Insert routes here
-app.use('/api/user', userRoutes)
+app.use('/api/users', userRoutes)
 app.use('/api/cats', catsRoutes)
 app.use('/api/pomodoro_profiles', profilesRoutes)
 app.use('/api/shop_items', shopItemsRoutes)

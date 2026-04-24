@@ -6,7 +6,7 @@ const router = express.Router()
 // == Inventories ==
 router.get('/:uid', InventoryController.getInventoryByUser)
 router.post('/:shop_id', InventoryController.addItemToInventory)
-router.put('/:id', InventoryController.updateItem)
+router.patch('/:id', InventoryController.updateItem)
 router.delete('/:id', InventoryController.deleteItem)
 
 export default router
