@@ -1,8 +1,13 @@
 // client/src/pages/Home/VirtualRoom.jsx
-import { Box, Paper, Typography, Fab } from "@mui/material";
+import { Box, Paper, Typography, Fab, Stack } from "@mui/material";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import TasksDrawer from "./TasksDrawer";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { Bounce } from "react-awesome-reveal";
+import SettingsIcon from "@mui/icons-material/Settings";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import ProfilesDrawer from "./ProfilesDrawer";
+import AuthContext from "../../contexts/AuthContext";
 
 const slots = {
 	desk: {
@@ -40,12 +45,11 @@ const slots = {
 		transform: "translate(-50%)",
 		width: "30%",
 		height: "20%",
-        backgroundColor: "rgba(0, 0, 0, 0.1)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 20,
-
+		backgroundColor: "rgba(0, 0, 0, 0.1)",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		borderRadius: 20,
 	},
 };
 
@@ -103,15 +107,46 @@ export default function VirtualRoom() {
 		},
 		floor1: { img: "" },
 		floor2: { img: "" },
-		wall: { img: "", },
-        timer: {
-            minutes: 60,
-            seconds: 0
-        }
+		wall: { img: "" },
+		timer: {
+			minutes: 0,
+			seconds: 0,
+		},
 	});
 	const [isTasksOpen, setIsTasksOpen] = useState(false);
+	const [isProfilesOpen, setIsProfilesOpen] = useState(false);
+	const [selectedProfile, setSelectedProfile] = useState()
+	const [allProfiles, setAllProfiles] = useState()
 
-    const formatTime = (num) => num.toString().padStart(2, '0')
+	const {user} = useContext(AuthContext)
+
+	useEffect(() => {
+		const raw = selectedProfile?.timeOn ?? selectedProfile?.timeon ?? selectedProfile?.time_on;
+		if (raw == null) return;
+
+		const minutes = Number(raw);
+		if (!Number.isFinite(minutes)) return;
+
+		setItems((prev) => {
+			if (prev.timer?.minutes === minutes && prev.timer?.seconds === 0)
+				return prev;
+			return { ...prev, timer: { minutes, seconds: 0 } };
+		});
+	}, [selectedProfile]);
+
+	useEffect(() => {
+		const getAllProfiles = async () => {
+			const results = await fetch(`/api/pomodoro_profiles/${user.uid}`)
+			const data = await results.json()
+
+			setSelectedProfile(data[0])
+			setAllProfiles(data)
+		} 
+
+		getAllProfiles()
+	}, [user])
+
+	const formatTime = (num) => String(num ?? 0).padStart(2, "0");
 
 	return (
 		<Box
@@ -149,45 +184,95 @@ export default function VirtualRoom() {
 				<Slot label="Floor Item 1" sx={slots.floor1} />
 				<Slot label="Floor Item 2" sx={slots.floor2} />
 				<Slot label="Wall Item" sx={slots.wall} item={items.wall} />
-				<Box sx={slots.timer}>
-					<Typography
-						variant="h2"
+				<Stack spacing={5}>
+					<Box sx={slots.timer}>
+						{(selectedProfile?.timeOn ?? selectedProfile?.timeon ?? selectedProfile?.time_on) && (
+							<Bounce>
+								<Typography
+									variant="h2"
+									sx={{
+										color: "common.white",
+										fontSize: {
+											xs: "1.2rem",
+											sm: "1.8rem",
+											md: "2.5rem",
+											lg: "3rem",
+										},
+									}}
+								>
+									{items && formatTime(items.timer.minutes)}:
+									{formatTime(items.timer.seconds)}
+								</Typography>
+							</Bounce>
+						)}
+					</Box>
+
+					{/* FAB to open Tasks */}
+					<Fab
+						color="primary"
+						aria-label="tasks"
+						onClick={() => setIsTasksOpen(true)}
 						sx={{
-							color: "common.white",
-							fontSize: {
-								xs: "1.2rem",
-								sm: "1.8rem",
-								md: "2.5rem",
-								lg: "3rem",
+							position: "absolute",
+							left: "5%",
+							top: "5%",
+							zIndex: 20,
+							width: { xs: 40, sm: 56, md: 64 },
+							height: { xs: 40, sm: 56, md: 64 },
+							"& .MuiSvgIcon-root": {
+								fontSize: { xs: "1rem", sm: "1.5rem", md: "2rem" },
 							},
 						}}
 					>
-						{formatTime(items.timer.minutes)}:{formatTime(items.timer.seconds)}
-					</Typography>
-				</Box>
+						<PlaylistAddCheckIcon />
+					</Fab>
 
-				{/* FAB to open Tasks */}
-				<Fab
-					color="primary"
-					aria-label="tasks"
-					onClick={() => setIsTasksOpen(true)}
-					sx={{
-						position: "absolute",
-						left: "5%",
-						top: "5%",
-						zIndex: 20,
-                        width: { xs: 40, sm: 56, md: 64 },
-                        height: { xs: 40, sm: 56, md: 64 },
-                        "& .MuiSvgIcon-root": {
-                            fontSize: { xs: "1rem", sm: "1.5rem", md: "2rem" },
-                        },
-					}}
-				>
-					<PlaylistAddCheckIcon />
-				</Fab>
+
+					<Stack
+						direction="row"
+						spacing={2}
+						sx={{
+							position: "absolute",
+							left: "50%",
+							top: "35%",
+							zIndex: 20,
+							transform: "translate(-50%, -50%)",
+							"& .MuiSvgIcon-root": {
+								fontSize: { xs: "1rem", sm: "1.5rem", md: "2rem" },
+							},
+						}}
+					>
+						<Fab
+							color="primary"
+							sx={{
+								width: { xs: 30, sm: 46, md: 54 },
+								height: { xs: 30, sm: 46, md: 54 },
+							}}
+							onClick={() => setIsProfilesOpen(true)}
+						>
+							<SettingsIcon />
+						</Fab>
+						<Fab
+							color="primary"
+							sx={{
+								width: { xs: 30, sm: 46, md: 54 },
+								height: { xs: 30, sm: 46, md: 54 },
+							}}
+						>
+							<PlayArrowIcon />
+						</Fab>
+					</Stack>
+				</Stack>
 
 				{/* Controlled Drawer */}
 				<TasksDrawer open={isTasksOpen} onClose={() => setIsTasksOpen(false)} />
+
+				{/* Profile Options Drawer */}
+				<ProfilesDrawer
+					open={isProfilesOpen}
+					onClose={() => setIsProfilesOpen(false)}
+					profiles={allProfiles}
+				/>
 			</Box>
 		</Box>
 	);

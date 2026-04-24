@@ -51,7 +51,7 @@ export default function CatSelect({ open, handleClose }) {
 		handleClose()
 	}
 
-	useEffect(() => {console.log(selected)}, [selected])
+	//useEffect(() => {console.log(selected)}, [selected])
 
 	return (
 		<Dialog

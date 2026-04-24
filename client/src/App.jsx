@@ -38,8 +38,8 @@ function App() {
             <Route index element={<Home/>}/>
             <Route path="profile" element={<Profile/>}/>
             <Route path="shop" element={<Shop/>}/>
-            <Route path="dev" element={<Testing/>}/>
           </Route>
+          <Route path="/dev" element={<Testing/>}/>
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

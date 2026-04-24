@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
         const results = await fetch('/api/users/', options)
         const data = await results.json()
 
-        console.log("Is new user?: ", data.newUser)
+        //console.log("Is new user?: ", data.newUser)
         setIsNewUser(data.newUser)
       }
 
@@ -58,7 +58,7 @@ export function AuthProvider({ children }) {
       // This listener handles all auth state changes, including after a successful popup sign-in
       setUser(currentUser);
       setLoading(false);
-      console.log("onAuthStateChanged: ", currentUser);
+      //console.log("onAuthStateChanged: ", currentUser);
     });
 
     return () => unsubscribe(); // Clean up the listener on unmount
