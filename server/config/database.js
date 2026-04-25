@@ -10,7 +10,7 @@ const config = {
     ssl: {
       rejectUnauthorized: false
     },
-    family: 4
+    family: 4,
 }
 
 export const pool = new pg.Pool(config)
