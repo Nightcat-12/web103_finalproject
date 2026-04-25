@@ -7,6 +7,10 @@
    windowMs: 15 * 60 * 1000, // 15 minutes
    max: 100, // limit each IP to 100 update attempts per window
  })
+const deleteUserLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // limit each IP to 20 delete attempts per window
+})
  // == Users ==
  router.get('/:uid', UsersController.getUser)
  router.post('/', (req, res, next) => {
@@ -15,5 +19,5 @@
    next()
  }, UsersController.signInUser)
  router.patch('/:uid', updateUserLimiter, UsersController.updateUser)
- router.delete('/:uid', verifyFirebaseToken, UsersController.deleteUser)
+router.delete('/:uid', deleteUserLimiter, verifyFirebaseToken, UsersController.deleteUser)
  export default router
