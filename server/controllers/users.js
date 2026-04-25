@@ -1,4 +1,5 @@
 import { pool } from '../config/database.js'
+import { getFirebaseAdminAuth } from '../config/firebaseAdmin.js'
 
 const getUser = async(req, res) => {
 
@@ -108,6 +109,20 @@ const updateUser = async(req, res) => {
 const deleteUser = async(req, res) => {
   try {
     const uid = req.params.uid
+
+        if (!req.authUid || req.authUid !== uid) {
+            return res.status(403).json({ error: 'Forbidden: cannot delete another user' })
+        }
+
+        const adminAuth = getFirebaseAdminAuth()
+
+        try {
+            await adminAuth.deleteUser(uid)
+        } catch (err) {
+            if (err.code !== 'auth/user-not-found') {
+                throw err
+            }
+        }
 
     const deleteQuery = `
         DELETE FROM users WHERE uid = $1

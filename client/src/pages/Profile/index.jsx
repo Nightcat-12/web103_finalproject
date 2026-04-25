@@ -119,7 +119,13 @@ export default function Profile() {
 
         try {
             setIsDeleting(true);
-            const response = await fetch(`/api/users/${user.uid}`, { method: "DELETE" });
+            const idToken = await user.getIdToken();
+            const response = await fetch(`/api/users/${user.uid}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${idToken}`,
+                },
+            });
 
             if (!response.ok) {
                 throw new Error("Unable to delete account");

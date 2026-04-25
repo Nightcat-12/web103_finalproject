@@ -1,6 +1,7 @@
  import express from 'express'
  import rateLimit from 'express-rate-limit'
  import UsersController from '../controllers/users.js'
+ import verifyFirebaseToken from '../middleware/verifyFirebaseToken.js'
  const router = express.Router()
  const updateUserLimiter = rateLimit({
    windowMs: 15 * 60 * 1000, // 15 minutes
@@ -14,5 +15,5 @@
    next()
  }, UsersController.signInUser)
  router.patch('/:uid', updateUserLimiter, UsersController.updateUser)
- router.delete('/:uid', UsersController.deleteUser)
+ router.delete('/:uid', verifyFirebaseToken, UsersController.deleteUser)
  export default router

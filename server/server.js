@@ -9,6 +9,7 @@ import shopItemsRoutes from './routes/shopItems.js'
 import inventoryRoutes from './routes/inventory.js'
 import sessionsRoutes from './routes/studySessions.js'
 import tasksRoutes from './routes/tasks.js'
+import { getFirebaseAdminAuth } from './config/firebaseAdmin.js'
 
 // import the router from your routes file
 
@@ -16,6 +17,31 @@ import tasksRoutes from './routes/tasks.js'
 dotenv.config()
 
 const app = express()
+
+const firebaseAdminStartupHealth = {
+    ok: false,
+    checkedAt: null,
+    error: null,
+}
+
+const checkFirebaseAdminHealth = async () => {
+    const checkedAt = new Date().toISOString()
+
+    try {
+        const adminAuth = getFirebaseAdminAuth()
+        await adminAuth.listUsers(1)
+
+        firebaseAdminStartupHealth.ok = true
+        firebaseAdminStartupHealth.error = null
+        firebaseAdminStartupHealth.checkedAt = checkedAt
+        return { ok: true, checkedAt, error: null }
+    } catch (err) {
+        firebaseAdminStartupHealth.ok = false
+        firebaseAdminStartupHealth.error = err.message
+        firebaseAdminStartupHealth.checkedAt = checkedAt
+        return { ok: false, checkedAt, error: err.message }
+    }
+}
 
 const createTraceId = () => `trace-${Date.now()}-${Math.random().toString(16).slice(2)}`
 
@@ -41,6 +67,26 @@ app.get('/', (req, res) => {
         </h1>
         `)
     })
+
+app.get('/api/health/firebase-admin', async (req, res) => {
+    const health = await checkFirebaseAdminHealth()
+
+    if (!health.ok) {
+        return res.status(500).json({
+            ok: false,
+            service: 'firebase-admin',
+            checkedAt: health.checkedAt,
+            error: health.error,
+        })
+    }
+
+    return res.status(200).json({
+        ok: true,
+        service: 'firebase-admin',
+        checkedAt: health.checkedAt,
+    })
+})
+
 const PORT = process.env.PORT || 3000
 
 // Insert routes here
@@ -52,6 +98,17 @@ app.use('/api/inventory', inventoryRoutes)
 app.use('/api/sessions', sessionsRoutes)
 app.use('/api/tasks', tasksRoutes)
 
+await checkFirebaseAdminHealth()
+
 app.listen(PORT, () => {
     console.log(`🍅 server listening on http://localhost:${PORT}`)
+
+    if (firebaseAdminStartupHealth.ok) {
+        console.log('[HealthCheck] Firebase Admin configured correctly')
+    } else {
+        console.error('[HealthCheck] Firebase Admin configuration check failed', {
+            checkedAt: firebaseAdminStartupHealth.checkedAt,
+            error: firebaseAdminStartupHealth.error,
+        })
+    }
 })
