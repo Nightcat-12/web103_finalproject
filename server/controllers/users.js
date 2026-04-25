@@ -25,14 +25,15 @@ const signInUser = async(req, res) => {
         const {uid, name, profilePicture} = req.body
         const traceId = req.traceId || req.get('x-trace-id') || 'missing-trace-id'
 
-        console.log(`[UsersController:${traceId}] signInUser payload received`, {
+        console.log('[UsersController] signInUser payload received', {
+            traceId,
             uid,
             hasName: Boolean(name),
             hasProfilePicture: Boolean(profilePicture),
         })
 
         if (!uid) {
-            console.error(`[UsersController:${traceId}] Missing uid in request body`)
+            console.error('[UsersController] Missing uid in request body', { traceId })
             return res.status(400).json({ error: 'uid is required' })
         }
 
@@ -43,14 +44,16 @@ const signInUser = async(req, res) => {
             RETURNING *
         `
 
-        console.log(`[UsersController:${traceId}] Attempting users insert for uid ${uid}`)
+        console.log('[UsersController] Attempting users insert', { traceId, uid })
         const results = await pool.query(postQuery, [uid, name, profilePicture])
-        console.log(`[UsersController:${traceId}] Insert result`, {
+        console.log('[UsersController] Insert result', {
+            traceId,
             insertedRowCount: results.rows.length,
         })
 
         if (results.rows.length > 0) {
-            console.log(`[UsersController:${traceId}] New user seeded`, {
+            console.log('[UsersController] New user seeded', {
+                traceId,
                 uid: results.rows[0].uid,
             })
             return res.json({
@@ -58,13 +61,17 @@ const signInUser = async(req, res) => {
                 user: results.rows[0]
             })
         } else {
-            console.log(`[UsersController:${traceId}] User already exists, selecting existing row`, { uid })
+            console.log('[UsersController] User already exists, selecting existing row', {
+                traceId,
+                uid,
+            })
             const existingUser = await pool.query(
                 `SELECT * FROM users WHERE uid=$1`,
                 [uid]
             )
 
-            console.log(`[UsersController:${traceId}] Existing user query result`, {
+            console.log('[UsersController] Existing user query result', {
+                traceId,
                 rowCount: existingUser.rows.length,
             })
 
@@ -76,7 +83,8 @@ const signInUser = async(req, res) => {
 
     } catch (err) {
         const traceId = req.traceId || req.get('x-trace-id') || 'missing-trace-id'
-        console.error(`[UsersController:${traceId}] signInUser failed`, {
+        console.error('[UsersController] signInUser failed', {
+            traceId,
             message: err.message,
         })
         res.status(409).json({error: err.message})
