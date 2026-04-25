@@ -8,8 +8,11 @@
  })
  // == Users ==
  router.get('/:uid', UsersController.getUser)
- router.post('/', UsersController.signInUser)
- router.patch('/:uid', UsersController.updateUser)
+ router.post('/', (req, res, next) => {
+   const traceId = req.traceId || req.get('x-trace-id') || 'missing-trace-id'
+   console.log(`[UsersRoute:${traceId}] POST /api/users reached`)
+   next()
+ }, UsersController.signInUser)
  router.patch('/:uid', updateUserLimiter, UsersController.updateUser)
  router.delete('/:uid', UsersController.deleteUser)
  export default router

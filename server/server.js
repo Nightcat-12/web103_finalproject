@@ -17,8 +17,16 @@ dotenv.config()
 
 const app = express()
 
+const createTraceId = () => `trace-${Date.now()}-${Math.random().toString(16).slice(2)}`
+
 app.use((req, res, next) => {
-  console.log(req.method, req.url);
+    const incomingTraceId = req.get('x-trace-id')
+    const traceId = incomingTraceId || createTraceId()
+
+    req.traceId = traceId
+    res.setHeader('x-trace-id', traceId)
+
+    console.log(`[RequestTrace:${traceId}] ${req.method} ${req.url}`)
   next();
 });
 

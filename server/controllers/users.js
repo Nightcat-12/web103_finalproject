@@ -22,8 +22,18 @@ const signInUser = async(req, res) => {
 
     try {
         const {uid, name, profilePicture} = req.body
+        const traceId = req.traceId || req.get('x-trace-id') || 'missing-trace-id'
 
-        console.log('Request body: ', req.body)
+        console.log(`[UsersController:${traceId}] signInUser payload received`, {
+            uid,
+            hasName: Boolean(name),
+            hasProfilePicture: Boolean(profilePicture),
+        })
+
+        if (!uid) {
+            console.error(`[UsersController:${traceId}] Missing uid in request body`)
+            return res.status(400).json({ error: 'uid is required' })
+        }
 
         const postQuery = `
             INSERT INTO users (uid, name, profilePicture, coins, createdAt)
@@ -32,18 +42,30 @@ const signInUser = async(req, res) => {
             RETURNING *
         `
 
+        console.log(`[UsersController:${traceId}] Attempting users insert for uid ${uid}`)
         const results = await pool.query(postQuery, [uid, name, profilePicture])
+        console.log(`[UsersController:${traceId}] Insert result`, {
+            insertedRowCount: results.rows.length,
+        })
 
         if (results.rows.length > 0) {
+            console.log(`[UsersController:${traceId}] New user seeded`, {
+                uid: results.rows[0].uid,
+            })
             return res.json({
                 newUser: true,
                 user: results.rows[0]
             })
         } else {
+            console.log(`[UsersController:${traceId}] User already exists, selecting existing row`, { uid })
             const existingUser = await pool.query(
                 `SELECT * FROM users WHERE uid=$1`,
                 [uid]
             )
+
+            console.log(`[UsersController:${traceId}] Existing user query result`, {
+                rowCount: existingUser.rows.length,
+            })
 
             return res.json({
                 newUser: false,
@@ -52,6 +74,10 @@ const signInUser = async(req, res) => {
         }
 
     } catch (err) {
+        const traceId = req.traceId || req.get('x-trace-id') || 'missing-trace-id'
+        console.error(`[UsersController:${traceId}] signInUser failed`, {
+            message: err.message,
+        })
         res.status(409).json({error: err.message})
     }
 
