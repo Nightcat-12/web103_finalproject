@@ -10,7 +10,7 @@ const shopItemByIdLimiter = rateLimit({
 })
 
 // == Shop Items ==
-router.get('/', ShopItemsController.getAllShopItems)
+router.get('/', shopItemByIdLimiter, ShopItemsController.getAllShopItems)
 
 router.get('/:shopItemId', shopItemByIdLimiter, ShopItemsController.getShopItemById)
 
