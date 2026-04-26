@@ -1,5 +1,5 @@
 // client/src/pages/Home/VirtualRoom.jsx
-import { Box, Paper, Typography, Fab, Stack } from "@mui/material";
+import { Box, Card, Paper, Typography, Fab, Stack, Badge } from "@mui/material";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import TasksDrawer from "./TasksDrawer";
 import { useContext, useEffect, useState } from "react";
@@ -8,6 +8,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ProfilesDrawer from "./ProfilesDrawer";
 import AuthContext from "../../contexts/AuthContext";
+import PauseIcon from "@mui/icons-material/Pause";
 
 const slots = {
 	desk: {
@@ -115,13 +116,67 @@ export default function VirtualRoom() {
 	});
 	const [isTasksOpen, setIsTasksOpen] = useState(false);
 	const [isProfilesOpen, setIsProfilesOpen] = useState(false);
-	const [selectedProfile, setSelectedProfile] = useState()
-	const [allProfiles, setAllProfiles] = useState()
+	const [selectedProfile, setSelectedProfile] = useState();
+	const [allProfiles, setAllProfiles] = useState();
+	const [remainingSeconds, setRemainingSeconds] = useState(0);
+	const [isRunning, setIsRunning] = useState(false);
+	const [endTime, setEndTime] = useState(null);
+	const [mode, setMode] = useState("work"); // "work" | "break" | "longBreak"
+	const [sessionCount, setSessionCount] = useState(0);
 
-	const {user} = useContext(AuthContext)
+	const { user } = useContext(AuthContext);
+
+	const getDurations = (profile) => {
+		if (!profile) return null;
+
+		return {
+			work: Number(profile.timeon),
+			break: Number(profile.timebreak),
+			longbreak: Number(profile.timelongbreak),
+		};
+	};
+
+	const startTimer = () => {
+		if (isRunning) return;
+
+		setEndTime(Date.now() + remainingSeconds * 1000);
+		setIsRunning(true);
+	};
+
+	const stopTimer = () => {
+		setIsRunning(false);
+	};
 
 	useEffect(() => {
-		const raw = selectedProfile?.timeOn ?? selectedProfile?.timeon ?? selectedProfile?.time_on;
+		if (!isRunning) return;
+
+		const interval = setInterval(() => {
+			const remaining = Math.max(0, endTime - Date.now());
+
+			setRemainingSeconds(Math.ceil(remaining / 1000));
+
+			if (remaining <= 0) {
+				setIsRunning(false);
+
+				if (mode == "work") {
+					const nextCount = sessionCount + 1;
+					setSessionCount(nextCount);
+					if (nextCount % 4 == 0) {
+						setMode("longbreak");
+					} else {
+						setMode("break");
+					}
+				} else {
+					setMode("work");
+				}
+			}
+		}, 250);
+
+		return () => clearInterval(interval);
+	}, [isRunning, endTime, mode]);
+
+	useEffect(() => {
+		const raw = selectedProfile?.timeon;
 		if (raw == null) return;
 
 		const minutes = Number(raw);
@@ -137,27 +192,33 @@ export default function VirtualRoom() {
 	const refreshProfiles = async () => {
 		if (!user?.uid) return;
 
-		const results = await fetch(`/api/pomodoro_profiles/${user.uid}`)
-		const data = await results.json()
+		const results = await fetch(`/api/pomodoro_profiles/${user.uid}`);
+		const data = await results.json();
 
-		setSelectedProfile(data[0])
-		setAllProfiles(data)
-	}
+		setSelectedProfile(data[0]);
+		setAllProfiles(data);
+	};
 
 	useEffect(() => {
-		refreshProfiles()
-	}, [user])
+		refreshProfiles();
+	}, [user]);
 
-	useEffect(() => {console.log("Selected profile: ", selectedProfile)}, [selectedProfile])
+	useEffect(() => {
+		const durations = getDurations(selectedProfile);
+		if (!durations) return;
 
-	const formatTime = (num) => String(num ?? 0).padStart(2, "0");
+		const minutes = durations[mode];
+		if (!Number.isFinite(minutes)) return;
+
+		setRemainingSeconds(minutes * 60);
+	}, [selectedProfile, mode]);
 
 	return (
 		<Box
 			sx={{
 				width: "80vw",
 				maxWidth: 1000,
-				margin: "0 auto"
+				margin: "0 auto",
 			}}
 		>
 			{/* Room canvas */}
@@ -189,27 +250,45 @@ export default function VirtualRoom() {
 				<Slot label="Floor Item 2" sx={slots.floor2} />
 				<Slot label="Wall Item" sx={slots.wall} item={items.wall} />
 				<Stack spacing={5}>
-					<Box sx={slots.timer}>
-						{(selectedProfile?.timeOn ?? selectedProfile?.timeon ?? selectedProfile?.time_on) && (
+					<Card sx={{ ...slots.timer, overflow: "visible" }} elevation={0}>
+						<Badge
+							badgeContent={sessionCount}
+							showZero
+							color="primary"
+							sx={{
+								position: "absolute",
+								top: 8,
+								right: 25,
+								zIndex: 2,
+							}}
+						>
+							<Box sx={{ width: 1, height: 1 }} />
+						</Badge>
+						<Typography variant="caption" sx={{ position: "absolute", top: 6, color: "#FFFFFF"}}>
+							{mode.toUpperCase()}
+						</Typography>
+						{selectedProfile?.timeon != null && (
 							<Bounce>
-								<Typography
-									variant="h2"
-									sx={{
-										color: "common.white",
-										fontSize: {
-											xs: "1.2rem",
-											sm: "1.8rem",
-											md: "2.5rem",
-											lg: "3rem",
-										},
-									}}
-								>
-									{items && formatTime(items.timer.minutes)}:
-									{formatTime(items.timer.seconds)}
-								</Typography>
+								<Stack>
+									<Typography
+										variant="h2"
+										sx={{
+											color: "common.white",
+											fontSize: {
+												xs: "1.2rem",
+												sm: "1.8rem",
+												md: "2.5rem",
+												lg: "3rem",
+											},
+										}}
+									>
+										{Math.floor(remainingSeconds / 60)}:
+										{String(remainingSeconds % 60).padStart(2, "0")}
+									</Typography>
+								</Stack>
 							</Bounce>
 						)}
-					</Box>
+					</Card>
 
 					{/* FAB to open Tasks */}
 					<Fab
@@ -230,7 +309,6 @@ export default function VirtualRoom() {
 					>
 						<PlaylistAddCheckIcon />
 					</Fab>
-
 
 					<Stack
 						direction="row"
@@ -262,8 +340,11 @@ export default function VirtualRoom() {
 								width: { xs: 30, sm: 46, md: 54 },
 								height: { xs: 30, sm: 46, md: 54 },
 							}}
+							onClick={() => {
+								isRunning ? stopTimer() : startTimer();
+							}}
 						>
-							<PlayArrowIcon />
+							{isRunning ? <PauseIcon /> : <PlayArrowIcon />}
 						</Fab>
 					</Stack>
 				</Stack>
