@@ -134,17 +134,21 @@ export default function VirtualRoom() {
 		});
 	}, [selectedProfile]);
 
+	const refreshProfiles = async () => {
+		if (!user?.uid) return;
+
+		const results = await fetch(`/api/pomodoro_profiles/${user.uid}`)
+		const data = await results.json()
+
+		setSelectedProfile(data[0])
+		setAllProfiles(data)
+	}
+
 	useEffect(() => {
-		const getAllProfiles = async () => {
-			const results = await fetch(`/api/pomodoro_profiles/${user.uid}`)
-			const data = await results.json()
-
-			setSelectedProfile(data[0])
-			setAllProfiles(data)
-		} 
-
-		getAllProfiles()
+		refreshProfiles()
 	}, [user])
+
+	useEffect(() => {console.log("Selected profile: ", selectedProfile)}, [selectedProfile])
 
 	const formatTime = (num) => String(num ?? 0).padStart(2, "0");
 
@@ -273,6 +277,9 @@ export default function VirtualRoom() {
 					open={isProfilesOpen}
 					onClose={() => setIsProfilesOpen(false)}
 					profiles={allProfiles}
+					onProfilesChanged={refreshProfiles}
+					selectedProfile={selectedProfile}
+					setSelectedProfile={setSelectedProfile}
 				/>
 			</Box>
 		</Box>
