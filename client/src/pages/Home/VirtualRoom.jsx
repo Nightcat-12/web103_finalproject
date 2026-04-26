@@ -154,6 +154,7 @@ export default function VirtualRoom() {
 				width: "80vw",
 				maxWidth: 1000,
 				margin: "0 auto",
+				pt: 15
 			}}
 		>
 			{/* Room canvas */}
