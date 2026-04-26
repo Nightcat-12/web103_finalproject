@@ -253,7 +253,7 @@ export default function Profile() {
 	if (loading || pageLoading) {
 		return (
 			<Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
-				<CircularProgress />
+				<CircularProgress size={100}/>
 			</Box>
 		);
 	}

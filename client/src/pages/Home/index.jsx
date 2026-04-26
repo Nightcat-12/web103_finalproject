@@ -6,11 +6,12 @@ import VirtualRoom from "./VirtualRoom";
 import { useContext, useState, useEffect } from "react";
 import AuthContext from "../../contexts/AuthContext";
 import CatSelect from "./CatSelect";
+import { CircularProgress } from "@mui/material";
 
 export default function Home() {
 	const { user, isNewUser } = useContext(AuthContext);
 	const [catDialogOpen, setCatDialogOpen] = useState(false);
-	const [profile, setProfile] = useState({});
+	const [profile, setProfile] = useState(null);
 
 	useEffect(() => {
 		const getCatInfo = async () => {
@@ -28,6 +29,7 @@ export default function Home() {
 		const createDefaultProfile = async () => {
 			if (!user || !isNewUser) return;
 			try {
+				console.log("Creating New Default Profile...");
 				// Check if user already has profiles (and a default) before creating
 				const existing = await fetch(`/api/pomodoro_profiles/${user.uid}`);
 				const profiles = await existing.json();
@@ -35,7 +37,7 @@ export default function Home() {
 				if (Array.isArray(profiles) && profiles.length > 0) {
 					// prefer an explicit default if present
 					const defaultProfile = profiles.find(
-						(p) => p.isDefault || p.isdefault || p.is_default
+						(p) => p.isDefault || p.isdefault || p.is_default,
 					);
 					setProfile(defaultProfile || profiles[0]);
 					return; // already has a profile, do not create
@@ -76,7 +78,15 @@ export default function Home() {
 	}, [profile]);
 
 	return (
-		<Box>
+		<Box
+			sx={{
+				display: "flex",
+				justifyContent: "center",
+				alignItems: "center",
+				minHeight: "calc(100svh - 75px)",
+				width: "100%",
+			}}
+		>
 			{/* <Typography variant="h1">
                 Home Page
             </Typography> */}
@@ -87,7 +97,7 @@ export default function Home() {
 				/>
 			)}
 
-			{profile && <VirtualRoom/>}
+			{user ? <VirtualRoom /> : <CircularProgress size={100}/>}
 		</Box>
 	);
 }
