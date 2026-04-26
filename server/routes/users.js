@@ -9,11 +9,11 @@
  })
 const updateUserLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 update attempts per window
+  max: 500, // limit each IP to 500 update attempts per window
 })
 const deleteUserLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // limit each IP to 20 delete attempts per window
+  max: 500, // limit each IP to 500 delete attempts per window
 })
  // == Users ==
  router.get('/:uid', UsersController.getUser)
