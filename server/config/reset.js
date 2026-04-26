@@ -1,4 +1,6 @@
 import { pool } from './database.js'
+import './dotenv.js'
+import { shopItems } from '../../client/src/data/shopItems.js'
 
 const createUsersTable = async () => {
   const createUsersTableQuery = `
@@ -157,13 +159,42 @@ const createTasksTable = async () => {
   }
 }
 
+const seedShopItemsTable = async() => {
+  await createShopItemsTable()
+
+  console.log("Seeding shop items")
+
+  shopItems.forEach((item) => {
+    const insertQuery = {
+      text: 'INSERT INTO shop_items (name, image, category, price) VALUES ($1, $2, $3, $4)'
+    }
+
+    const values = [
+      item.name,
+      item.img,
+      item.category,
+      item.price
+    ]
+
+    pool.query(insertQuery, values, (err,res) => {
+      if (err) {
+        console.error('⚠️ error inserting shop item', err)
+        return
+      }
+
+      console.log(`✅ ${item.name} added successfully`)
+    })
+  })
+
+}
+
 const seedDatabase = async () => {
   try {
     await createUsersTable()
     await createCatsTable()
     await createPomodoroProfilesTable()
     await createStudySessionsTable()
-    await createShopItemsTable()
+    seedShopItemsTable()
     await createInventoryTable()
     await createTasksTable()
     console.log('✅ database tables created successfully!')

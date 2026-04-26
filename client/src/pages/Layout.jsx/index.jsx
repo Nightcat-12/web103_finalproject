@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Box from "@mui/material/Box";
 import useAuthRedirect from "../../hooks/useAuthRedirect";
+import { Toolbar } from "@mui/material";
 
 export default function Layout() {
 
@@ -10,7 +11,8 @@ export default function Layout() {
     return (
         <Box>
             <NavBar/>
-            <Box sx={{marginTop: "3%"}}>
+            <Box sx={{ height: 75 }} />
+            <Box>
                 <Outlet/>
             </Box>
         </Box>
