@@ -162,6 +162,8 @@ const createTasksTable = async () => {
 const seedShopItemsTable = async() => {
   await createShopItemsTable()
 
+  console.log("Seeding shop items")
+
   shopItems.forEach((item) => {
     const insertQuery = {
       text: 'INSERT INTO shop_items (name, image, category, price) VALUES ($1, $2, $3, $4)'

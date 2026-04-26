@@ -4,7 +4,6 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import CardActions from "@mui/material/CardActions";
-import CardCover from '@mui/joy/CardCover'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import Box from "@mui/material/Box";
 
@@ -18,16 +17,26 @@ export default function ShopCard({ shopItem }){
     <Card variant='soft' 
         sx={{ 
                 maxWidth: 345, 
-                //cute idea but a little too much
-                // backgroundImage: "url('/patternSopItems.svg')", 
-                backgroundColor: "rgb(253, 246, 236)", 
-                border:"0.5px solid rgb(145, 136, 123)",
+                border: "2px solid #e0e0e0",
+                borderRadius: 5,
+                backgroundColor: "transparent",
+                transition: "all 0.4s ease",
                 '&:hover': { 
-                    border:"0.5px solid #74B8FC",
-                    boxShadow: 2,
+                    borderColor: 'primary.main',
+                    backgroundColor: 'primary.main',
+                    color: 'white',
                     cursor: 'pointer', 
-                    transition: 'background-color 0.1s ease' 
+                    boxShadow: 2,
+                    '& .MuiTypography-root': {
+                        color: 'white',
+                    },
+                    '& .MuiCardContent-root .MuiTypography-root': {
+                        color: 'white',
+                    },
+                    '& .MuiSvgIcon-root': {
+                        color: 'white',
                     }
+                }
             }}>
         <CardActionArea onClick={() => navigate(`/shop/${shopItem.id}`)}>
             <CardMedia
@@ -35,7 +44,15 @@ export default function ShopCard({ shopItem }){
                 alt={shopItem.name}
                 height="140"
                 image= {shopItem.image}
-                sx={{objectFit: 'cover', height: 200, width: '100%'}}
+                sx={{
+                    objectFit: 'contain',
+                    objectPosition: 'center',
+                    height: 230,
+                    width: '100%',
+                    p: 1,
+                    boxSizing: 'border-box',
+                    backgroundColor: 'transparent',
+                }}
             />
             <CardContent>
                 <Typography align="left" gutterBottom variant="h5" component="div">

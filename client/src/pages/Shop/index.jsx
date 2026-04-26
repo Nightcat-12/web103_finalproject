@@ -21,10 +21,16 @@ export default function Shop() {
 
     useEffect(() => {
         const fetchShopItems = async() => {
-            const res = await fetch('/api/shop_items')
-            const data = await res.json()
-            setShopItems(data)
-            setLoading(false)
+            try {
+
+                const res = await fetch('/api/shop_items')
+                const data = await res.json()
+                setShopItems(data)
+            } catch (err) {
+                console.error(err)
+            } finally {
+                setLoading(false)
+            }
         }
 
         fetchShopItems()
