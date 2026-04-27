@@ -82,19 +82,6 @@ export default function Inventory({ open, onClose }) {
 
   useEffect(() => {
     if (!open || !user?.uid) {
-      // #region agent log
-      fetch("http://127.0.0.1:7902/ingest/19da2628-1f15-41a8-839b-145e0e286fb3", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "419e30" },
-        body: JSON.stringify({
-          sessionId: "419e30",
-          location: "Inventory.jsx:useEffect",
-          message: "inventory fetch skipped",
-          data: { open: !!open, hasUid: !!user?.uid, hypothesisId: "H4" },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       return; //  only fetch when drawer opens and user exists
     }
 
@@ -102,63 +89,15 @@ export default function Inventory({ open, onClose }) {
       setLoading(true);
       setError(null);
       try {
-        // #region agent log
-        fetch("http://127.0.0.1:7902/ingest/19da2628-1f15-41a8-839b-145e0e286fb3", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "419e30" },
-          body: JSON.stringify({
-            sessionId: "419e30",
-            location: "Inventory.jsx:fetchInventory:start",
-            message: "inventory fetch start",
-            data: { hasUid: true, uidLen: user.uid?.length, hypothesisId: "H4" },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
+        
         const res = await fetch(`/api/inventory/${user.uid}`); // ✅ real API call per user
-        // #region agent log
-        fetch("http://127.0.0.1:7902/ingest/19da2628-1f15-41a8-839b-145e0e286fb3", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "419e30" },
-          body: JSON.stringify({
-            sessionId: "419e30",
-            location: "Inventory.jsx:fetchInventory:response",
-            message: "inventory fetch HTTP",
-            data: { status: res.status, ok: res.ok, hypothesisId: "H1" },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
+        
         if (!res.ok) throw new Error("Failed to fetch inventory");
         const data = await res.json();
-        // #region agent log
-        fetch("http://127.0.0.1:7902/ingest/19da2628-1f15-41a8-839b-145e0e286fb3", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "419e30" },
-          body: JSON.stringify({
-            sessionId: "419e30",
-            location: "Inventory.jsx:fetchInventory:parsed",
-            message: "inventory JSON ok",
-            data: { isArray: Array.isArray(data), len: Array.isArray(data) ? data.length : null, hypothesisId: "H2" },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
+        
         setShopItems(data);
       } catch (err) {
-        // #region agent log
-        fetch("http://127.0.0.1:7902/ingest/19da2628-1f15-41a8-839b-145e0e286fb3", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "419e30" },
-          body: JSON.stringify({
-            sessionId: "419e30",
-            location: "Inventory.jsx:fetchInventory:catch",
-            message: "inventory fetch threw",
-            data: { errMsg: String(err?.message), hypothesisId: "H2" },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
+        
         setError(err.message);
       } finally {
         setLoading(false);
@@ -191,7 +130,7 @@ export default function Inventory({ open, onClose }) {
           borderRadius: "16px 16px 0 0",
           maxHeight: "80vh",
           overflow: "hidden",
-          fontFamily: "'Courier New', monospace",
+          fontFamily: "inherit",
         },
       }}
     >
@@ -219,7 +158,6 @@ export default function Inventory({ open, onClose }) {
           <Box>
             <Typography
               sx={{
-                fontFamily: "'Courier New', monospace",
                 fontWeight: 700,
                 fontSize: "1rem",
                 color: INVENTORY_TEXT,
@@ -231,7 +169,6 @@ export default function Inventory({ open, onClose }) {
             </Typography>
             <Typography
               sx={{
-                fontFamily: "'Courier New', monospace",
                 fontSize: "0.65rem",
                 color: INVENTORY_MUTED,
                 letterSpacing: "0.08em",
@@ -290,7 +227,6 @@ export default function Inventory({ open, onClose }) {
             >
               <Typography
                 sx={{
-                  fontFamily: "'Courier New', monospace",
                   fontSize: "0.65rem",
                   fontWeight: 600,
                   color: isActive ? "#2563eb" : INVENTORY_MUTED,
@@ -326,14 +262,14 @@ export default function Inventory({ open, onClose }) {
 
           {/* ✅ Error state */}
           {error && (
-            <Typography sx={{ color: "#f87171", fontFamily: "'Courier New', monospace", fontSize: "0.75rem", textAlign: "center", pt: 4 }}>
+            <Typography sx={{ color: "#f87171", fontSize: "0.75rem", textAlign: "center", pt: 4 }}>
               {error}
             </Typography>
           )}
 
           {/* ✅ Empty state */}
           {!loading && !error && shopItems.length === 0 && (
-            <Typography sx={{ color: INVENTORY_MUTED, fontFamily: "'Courier New', monospace", fontSize: "0.75rem", textAlign: "center", pt: 4 }}>
+            <Typography sx={{ color: INVENTORY_MUTED, fontSize: "0.75rem", textAlign: "center", pt: 4 }}>
               No items in your inventory yet.
             </Typography>
           )}
@@ -411,7 +347,6 @@ export default function Inventory({ open, onClose }) {
             <Box>
               <Typography
                 sx={{
-                  fontFamily: "'Courier New', monospace",
                   fontSize: "0.65rem",
                   color: "#2563eb",
                   textTransform: "uppercase",
@@ -423,7 +358,6 @@ export default function Inventory({ open, onClose }) {
               </Typography>
               <Typography
                 sx={{
-                  fontFamily: "'Courier New', monospace",
                   fontSize: "0.9rem",
                   color: INVENTORY_TEXT,
                   fontWeight: 700,
@@ -439,13 +373,12 @@ export default function Inventory({ open, onClose }) {
 
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <Typography
-                sx={{ fontFamily: "'Courier New', monospace", fontSize: "0.65rem", color: INVENTORY_MUTED }}
+                sx={{ fontSize: "0.65rem", color: INVENTORY_MUTED }}
               >
                 PRICE
               </Typography>
               <Typography
                 sx={{
-                  fontFamily: "'Courier New', monospace",
                   fontSize: "1rem",
                   color: "#34d399",
                   fontWeight: 700,
@@ -470,7 +403,6 @@ export default function Inventory({ open, onClose }) {
             >
               <Typography
                 sx={{
-                  fontFamily: "'Courier New', monospace",
                   fontSize: "0.7rem",
                   color: "#34d399",
                   fontWeight: 700,
