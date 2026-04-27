@@ -9,6 +9,7 @@ import {
 	CircularProgress,
 } from "@mui/material";
 
+import StoreIcon from "@mui/icons-material/Store";
 import ShopCard from "../../components/ShopCard.jsx";
 import { useContext, useState, useEffect } from "react";
 import { AttentionSeeker } from "react-awesome-reveal";
@@ -87,41 +88,58 @@ export default function Shop() {
 						alignItems: { xs: "flex-start", md: "center" },
 					}}
 				>
-					<Typography variant="h2" sx={{ paddingLeft: 4 }}>
-						⋆˚꩜｡ PawMart ⋆˚꩜｡
+					<Typography variant="h2" sx={{ paddingLeft: 5 }}>
+						<StoreIcon
+							sx={{
+								fontSize: 70,
+								color: "primary.main",
+								position: "relative",
+								top: "10px",
+							}}
+						/>
+						PawMart
 					</Typography>
-					<Stack
-						direction="row"
-						spacing={2}
-						sx={{ alignItems: "center", flexWrap: "wrap" }}
+					<Box
+						sx={{
+							alignContent: "center",
+							display: "flex",
+							flexDirection: "row-reverse",
+							gap: 1,
+							p: 2,
+							m: 2,
+						}}
 					>
-						<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-							<Button
-								variant={activeFilter === "Lamps" ? "contained" : "outlined"}
-								onClick={() => handleFilterClick("Lamps")}
-							>
-								Lamps
-							</Button>
-							<Button
-								variant={activeFilter === "Desks" ? "contained" : "outlined"}
-								onClick={() => handleFilterClick("Desks")}
-							>
-								Desks
-							</Button>
-							<Button
-								variant={activeFilter === "Plants" ? "contained" : "outlined"}
-								onClick={() => handleFilterClick("Plants")}
-							>
-								Plants
-							</Button>
-						</Stack>
 						<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
 							<AttentionSeeker effect="tada">
 								<PawCoin />
 							</AttentionSeeker>
 							<Typography> x {coins}</Typography>
 						</Stack>
-					</Stack>
+						<Button
+							variant={activeFilter === "Lamps" ? "contained" : "outlined"}
+							onClick={() => handleFilterClick("Lamps")}
+						>
+							Lamps
+						</Button>
+						<Button
+							variant={activeFilter === "Desks" ? "contained" : "outlined"}
+							onClick={() => handleFilterClick("Desks")}
+						>
+							Desks
+						</Button>
+						<Button
+							variant={activeFilter === "Plants" ? "contained" : "outlined"}
+							onClick={() => handleFilterClick("Plants")}
+						>
+							Plants
+						</Button>
+						<Button
+							variant={activeFilter === "Frames" ? "contained" : "outlined"}
+							onClick={() => handleFilterClick("Frames")}
+						>
+							Frames
+						</Button>
+					</Box>
 				</Stack>
 			</Box>
 			{/* displaying data on grid format, all shop items on display unless a filter button is clicked */}
