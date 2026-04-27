@@ -134,7 +134,7 @@ const deleteTask = async(req, res) => {
 }
 
 export default {
-    getAllTasksFromUser,
+    getAllTasks,
     createTask,
     updateTask,
     deleteTask

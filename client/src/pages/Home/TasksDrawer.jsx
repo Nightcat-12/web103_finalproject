@@ -17,9 +17,8 @@ import AuthContext from "../../contexts/AuthContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
-export default function TasksDrawer() {
+export default function TasksDrawer({ open, onClose }) {
 	const { user } = useContext(AuthContext);
-	const [open, setOpen] = useState(false);
 	const [tasks, setTasks] = useState([]);
 	const [newTaskTitle, setNewTaskTitle] = useState("");
 	const [filter, setFilter] = useState("all");
@@ -66,9 +65,9 @@ export default function TasksDrawer() {
 
 	useEffect(() => {
 		if (!user) {
-			setOpen(false);
+			onClose?.();
 		}
-	}, [user]);
+	}, [user, onClose]);
 
 	const createTask = async () => {
 		if (!user?.uid || !newTaskTitle.trim()) {
@@ -192,21 +191,11 @@ export default function TasksDrawer() {
 	};
 
 	return (
-		<Box>
-			<Button
-				onClick={() => {
-					setOpen(!open);
-				}}
-				variant="contained"
-			>
-				Tasks
-			</Button>
-
-			<Drawer
-				open={open}
-				onClose={() => setOpen(false)}
-				sx={{ "& .MuiDrawer-paper": { backgroundColor: "primary.main", color: "white" } }}
-			>
+		<Drawer
+			open={open}
+			onClose={onClose}
+			sx={{ "& .MuiDrawer-paper": { backgroundColor: "primary.main", color: "white" } }}
+		>
 				<Stack
 					sx={{
 						width: { xs: "100vw", sm: "80vw", md: "36vw" },
@@ -397,7 +386,6 @@ export default function TasksDrawer() {
 						</>
 					)}
 				</Stack>
-			</Drawer>
-		</Box>
+		</Drawer>
 	);
 }
