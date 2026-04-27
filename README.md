@@ -27,27 +27,28 @@ Backend: Express, PostgreSQL
 
 ## Features
 
-### Daily Task Tracker
 
-Keep your goals organized in one place. Easily add, update, and check off your daily to-dos so you always know exactly what you need to tackle next.
-
-[gif goes here]
-
-### Flexible Focus Timer
+### ✅ Flexible Focus Timer
 
 Stay in the zone with a timer that adapts to your workflow. Finish a task early? Seamlessly swap to your next to-do item mid-session without losing your momentum or having to restart the clock.
 
-[gif goes here]
+<img src="./planning/assets/gifs/timer.gif">
 
-### Custom Timer Profiles
+### ✅ Custom Timer Profiles
 
 Work your way by setting up custom work and break intervals. Whether you want a quick 15-minute sprint or a 50-minute deep dive, you're in control—and the longer you choose to focus, the bigger your coin reward will be!
 
-[gif goes here]
+<img src="./planning/assets/gifs/profiles.gif">
 
-### Earn Coins While You Work
+### ✅ Earn Coins While You Work
 
 Turn your productivity into playtime! Get instant coin rewards just for checking off quick tasks, and earn massive payouts for successfully completing uninterrupted focus sessions.
+
+<img src="./planning/assets/gifs/coins.gif">
+
+### Daily Task Tracker
+
+Keep your goals organized in one place. Easily add, update, and check off your daily to-dos so you always know exactly what you need to tackle next.
 
 [gif goes here]
 

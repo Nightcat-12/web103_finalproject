@@ -7,7 +7,7 @@ const router = express.Router()
 
 router.get('/:uid', ProfilesController.getAllProfiles)
 router.post('/', ProfilesController.addProfile)
-router.patch('/', ProfilesController.updateProfile)
-router.delete('/', ProfilesController.deleteProfile)
+router.patch('/:id', ProfilesController.updateProfile)
+router.delete('/:id', ProfilesController.deleteProfile)
 
 export default router

@@ -1,4 +1,6 @@
   import { pool } from './database.js'
+import './dotenv.js'
+import { shopItems } from '../../client/src/data/shopItems.js'
 
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -183,13 +185,43 @@
       ON tasks (createdAt DESC);
     `
 
-    const ok = await runQueryWithRetry(createTasksTableQuery, 'tasks')
-    if (ok) {
-      console.log('✅ tasks table created successfully!')
+  try {
+    const res = await pool.query(createTasksTableQuery)
+    console.log('✅ tasks table created successfully!')
+  } catch (err) {
+    console.error(`⚠️ Error creating tasks table\n${err}`)
+  }
+}
+
+const seedShopItemsTable = async() => {
+  await createShopItemsTable()
+
+  console.log("Seeding shop items")
+
+  shopItems.forEach((item) => {
+    const insertQuery = {
+      text: 'INSERT INTO shop_items (name, image, category, price) VALUES ($1, $2, $3, $4)'
     }
 
-    return ok
-  }
+    const values = [
+      item.name,
+      item.img,
+      item.category,
+      item.price
+    ]
+
+    pool.query(insertQuery, values, (err,res) => {
+      if (err) {
+        console.error('⚠️ error inserting shop item', err)
+        return
+      }
+
+      console.log(`✅ ${item.name} added successfully`)
+    })
+  })
+
+}
+
 
   const seedDatabase = async () => {
     let hasFailures = false
@@ -199,6 +231,7 @@
         createUsersTable,
         createCatsTable,
         createPomodoroProfilesTable,
+        seedShopItemsTable,
         createStudySessionsTable,
         createShopItemsTable,
         createInventoryTable,

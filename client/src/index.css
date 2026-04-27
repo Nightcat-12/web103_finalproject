@@ -22,7 +22,7 @@
   background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  background-color: rgb(255, 244, 227);
+  background-color: rgb(253, 246, 235);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
@@ -67,22 +67,24 @@ html.splash-page #root {
 
 #root {
   min-height: 100svh;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
 }
 
 #root > * {
   width: 100%;
   max-width: none;
-  min-height: 100svh;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.splash-page #root > * {
   justify-content: center;
   align-items: center;
   text-align: center;
-  box-sizing: border-box;
-  padding: 0;
 }
 
 h1,

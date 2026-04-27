@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@base-ui/react": "^1.4.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^9.0.0",
+    "@mui/joy": "^5.0.0-beta.52",
     "@mui/material": "^9.0.0",
     "react": "^19.2.4",
     "react-awesome-reveal": "^4.3.1",
