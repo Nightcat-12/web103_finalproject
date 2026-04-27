@@ -1,8 +1,6 @@
 import {
-	Box,
 	Button,
 	Checkbox,
-	Chip,
 	Divider,
 	Drawer,
 	Paper,
@@ -12,7 +10,7 @@ import {
 	ToggleButtonGroup,
 	Typography,
 } from "@mui/material";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import AuthContext from "../../contexts/AuthContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
@@ -29,8 +27,6 @@ export default function TasksDrawer({ open, onClose }) {
 	const [editingTitle, setEditingTitle] = useState("");
 	const [editingCompleted, setEditingCompleted] = useState(false);
 
-	const completedCount = useMemo(() => tasks.filter((task) => task.completed).length, [tasks]);
-
 	const fetchTasks = useCallback(async () => {
 		if (!user?.uid) {
 			return;
@@ -41,8 +37,12 @@ export default function TasksDrawer({ open, onClose }) {
 
 		try {
 			const query =
-				filter === "all" ? "" : `?completed=${filter === "completed" ? "true" : "false"}`;
-			const response = await fetch(`${API_BASE_URL}/api/tasks/${user.uid}${query}`);
+				filter === "all"
+					? ""
+					: `?completed=${filter === "completed" ? "true" : "false"}`;
+			const response = await fetch(
+				`${API_BASE_URL}/api/tasks/${user.uid}${query}`,
+			);
 
 			if (!response.ok) {
 				throw new Error("Unable to load tasks.");
@@ -112,15 +112,18 @@ export default function TasksDrawer({ open, onClose }) {
 		setError("");
 
 		try {
-			const response = await fetch(`${API_BASE_URL}/api/tasks/${editingTaskId}`, {
-				method: "PATCH",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					userId: user.uid,
-					title: editingTitle.trim(),
-					completed: editingCompleted,
-				}),
-			});
+			const response = await fetch(
+				`${API_BASE_URL}/api/tasks/${editingTaskId}`,
+				{
+					method: "PATCH",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						userId: user.uid,
+						title: editingTitle.trim(),
+						completed: editingCompleted,
+					}),
+				},
+			);
 
 			if (!response.ok) {
 				throw new Error("Unable to update task.");
@@ -194,30 +197,37 @@ export default function TasksDrawer({ open, onClose }) {
 		<Drawer
 			open={open}
 			onClose={onClose}
-			sx={{ "& .MuiDrawer-paper": { backgroundColor: "primary.main", color: "white" } }}
+			sx={{
+				"& .MuiDrawer-paper": {
+					backgroundColor: "primary.main",
+					color: "white",
+					width: "30vw",
+				},
+			}}
 		>
+			<Stack
+				sx={{
+					width: "100%",
+					boxSizing: "border-box",
+					justifyContent: "flex-start",
+					alignItems: "center",
+					padding: "20px",
+					height: "100%",
+				}}
+				spacing={2}
+			>
+				<Typography variant="h5">Tasks</Typography>
+				<Divider color="white" sx={{ width: "80%", color: "white" }} />
+
 				<Stack
-					sx={{
-						width: { xs: "100vw", sm: "80vw", md: "36vw" },
-						minWidth: { md: 420 },
-						justifyContent: "flex-start",
-						alignItems: "stretch",
-						padding: "20px",
-						height: "100%",
-					}}
+					sx={{ width: "80%", alignItems: "stretch", justifyContent: "center" }}
 					spacing={2}
 				>
-					<Stack direction="row" justifyContent="space-between" alignItems="center">
-						<Typography variant="h5">Tasks</Typography>
-						<Chip label={`${completedCount}/${tasks.length} complete`} size="small" />
-					</Stack>
-					<Divider color="white" sx={{ color: "white" }} />
-
 					{!user ? (
 						<Typography>Please sign in to manage tasks.</Typography>
 					) : (
 						<>
-							<Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+							<Stack direction="column" spacing={1} sx={{ width: "100%" }}>
 								<TextField
 									fullWidth
 									label="New task"
@@ -233,14 +243,21 @@ export default function TasksDrawer({ open, onClose }) {
 									disabled={saving}
 									sx={{
 										"& .MuiInputBase-input": { color: "white" },
-										"& .MuiInputLabel-root": { color: "rgba(255,255,255,0.85)" },
+										"& .MuiInputLabel-root": {
+											color: "rgba(255,255,255,0.85)",
+										},
 										"& .MuiOutlinedInput-notchedOutline": {
 											borderColor: "rgba(255,255,255,0.5)",
 										},
 									}}
 								/>
-								<Button variant="contained" onClick={createTask} disabled={saving}>
-									Add
+								<Button
+									variant="contained"
+									onClick={createTask}
+									disabled={saving}
+									fullWidth
+								>
+									Add Task
 								</Button>
 							</Stack>
 
@@ -253,10 +270,12 @@ export default function TasksDrawer({ open, onClose }) {
 									}
 								}}
 								size="small"
+								fullWidth
 								sx={{
 									"& .MuiToggleButton-root": {
 										color: "white",
 										borderColor: "rgba(255,255,255,0.45)",
+										flex: 1,
 									},
 									"& .Mui-selected": {
 										backgroundColor: "rgba(255,255,255,0.22)",
@@ -268,13 +287,14 @@ export default function TasksDrawer({ open, onClose }) {
 								<ToggleButton value="completed">Completed</ToggleButton>
 							</ToggleButtonGroup>
 
-							{error ? <Typography color="error.light">{error}</Typography> : null}
+							{error ? (
+								<Typography color="error.light">{error}</Typography>
+							) : null}
 
-							<Stack spacing={1.2} sx={{ overflowY: "auto", pr: 0.5 }}>
-								{loading ? <Typography>Loading tasks...</Typography> : null}
-								{!loading && tasks.length === 0 ? (
-									<Typography>No tasks in this filter yet.</Typography>
-								) : null}
+							<Stack
+								spacing={1.2}
+								sx={{ overflowY: "auto", pr: 0.5, width: "100%" }}
+							>
 								{tasks.map((task) => {
 									const isEditing = editingTaskId === task.id;
 
@@ -283,32 +303,53 @@ export default function TasksDrawer({ open, onClose }) {
 											key={task.id}
 											elevation={0}
 											sx={{
-												p: 1.25,
-												backgroundColor: "rgba(255,255,255,0.12)",
+												p: 1.5,
+												width: "100%",
+												boxSizing: "border-box",
+												backgroundColor: "primary.light",
 												color: "white",
+												boxShadow: "none",
+												borderRadius: 2,
+												border: "1px solid rgba(255, 254, 254, 0.08)",
+												overflow: "hidden",
 											}}
 										>
-											<Stack spacing={1}>
-												<Stack direction="row" spacing={1} alignItems="center">
+											<Stack spacing={1} sx={{ width: "100%", minWidth: 0 }}>
+												<Stack
+													direction="row"
+													spacing={1}
+													alignItems="center"
+													sx={{ width: "100%", minWidth: 0 }}
+												>
 													<Checkbox
-														checked={isEditing ? editingCompleted : task.completed}
+														checked={
+															isEditing ? editingCompleted : task.completed
+														}
 														onChange={(event) => {
 															if (isEditing) {
 																setEditingCompleted(event.target.checked);
 																return;
 															}
 
-															toggleTaskCompleted(task.id, event.target.checked);
+															toggleTaskCompleted(
+																task.id,
+																event.target.checked,
+															);
 														}}
 														disabled={saving}
-														sx={{ color: "white", "&.Mui-checked": { color: "white" } }}
+														sx={{
+															color: "white",
+															"&.Mui-checked": { color: "white" },
+														}}
 													/>
 													{isEditing ? (
 														<TextField
 															fullWidth
 															size="small"
 															value={editingTitle}
-															onChange={(event) => setEditingTitle(event.target.value)}
+															onChange={(event) =>
+																setEditingTitle(event.target.value)
+															}
 															disabled={saving}
 															sx={{
 																"& .MuiInputBase-input": { color: "white" },
@@ -321,8 +362,12 @@ export default function TasksDrawer({ open, onClose }) {
 														<Typography
 															flex={1}
 															sx={{
-																textDecoration: task.completed ? "line-through" : "none",
+																minWidth: 0,
+																textDecoration: task.completed
+																	? "line-through"
+																	: "none",
 																opacity: task.completed ? 0.75 : 1,
+																wordBreak: "break-word",
 															}}
 														>
 															{task.title}
@@ -330,10 +375,20 @@ export default function TasksDrawer({ open, onClose }) {
 													)}
 												</Stack>
 
-												<Stack direction="row" spacing={1} justifyContent="flex-end">
+												<Stack
+													direction="row"
+													spacing={1}
+													justifyContent="flex-end"
+													sx={{ width: "100%", minWidth: 0, flexWrap: "wrap" }}
+												>
 													{isEditing ? (
 														<>
-															<Button size="small" variant="contained" onClick={saveTaskEdit} disabled={saving}>
+															<Button
+																size="small"
+																variant="contained"
+																onClick={saveTaskEdit}
+																disabled={saving}
+															>
 																Save
 															</Button>
 															<Button
@@ -345,7 +400,10 @@ export default function TasksDrawer({ open, onClose }) {
 																	setEditingCompleted(false);
 																}}
 																disabled={saving}
-																sx={{ color: "white", borderColor: "rgba(255,255,255,0.55)" }}
+																sx={{
+																	color: "white",
+																	borderColor: "rgba(255,255,255,0.55)",
+																}}
 															>
 																Cancel
 															</Button>
@@ -361,7 +419,10 @@ export default function TasksDrawer({ open, onClose }) {
 																	setEditingCompleted(task.completed);
 																}}
 																disabled={saving}
-																sx={{ color: "white", borderColor: "rgba(255,255,255,0.55)" }}
+																sx={{
+																	color: "white",
+																	borderColor: "rgba(255,255,255,0.55)",
+																}}
 															>
 																Edit
 															</Button>
@@ -371,7 +432,10 @@ export default function TasksDrawer({ open, onClose }) {
 																color="error"
 																onClick={() => deleteTask(task.id)}
 																disabled={saving}
-																sx={{ borderColor: "rgba(255,255,255,0.4)", color: "white" }}
+																sx={{
+																	borderColor: "rgba(255,255,255,0.4)",
+																	color: "white",
+																}}
 															>
 																Delete
 															</Button>
@@ -382,10 +446,15 @@ export default function TasksDrawer({ open, onClose }) {
 										</Paper>
 									);
 								})}
+								{loading ? <Typography>Loading tasks...</Typography> : null}
+								{!loading && tasks.length === 0 ? (
+									<Typography>No tasks in this filter yet.</Typography>
+								) : null}
 							</Stack>
 						</>
 					)}
 				</Stack>
+			</Stack>
 		</Drawer>
 	);
 }

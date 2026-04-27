@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 import Testing from "../Testing";
 import TasksDrawer from "./TasksDrawer";
 import VirtualRoom from "./VirtualRoom";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import AuthContext from "../../contexts/AuthContext";
 import CatSelect from "./CatSelect";
 import { CircularProgress } from "@mui/material";
@@ -12,11 +12,12 @@ export default function Home() {
 	const { user, isNewUser } = useContext(AuthContext);
 	const [catDialogOpen, setCatDialogOpen] = useState(false);
 	const [profile, setProfile] = useState(null);
+	const defaultProfileCreatedForUser = useRef(null);
 
 	useEffect(() => {
 		const getCatInfo = async () => {
 			try {
-				const results = await fetch(`/api/cats/${user.uid}`);
+				const results = await fetch(`/api/cats/${user?.uid}`);
 				const data = await results.json();
 
 				console.log("Data: ", data);
@@ -28,6 +29,8 @@ export default function Home() {
 
 		const createDefaultProfile = async () => {
 			if (!user || !isNewUser) return;
+			if (defaultProfileCreatedForUser.current === user.uid) return;
+			defaultProfileCreatedForUser.current = user.uid;
 			try {
 				console.log("Creating New Default Profile...");
 				// Check if user already has profiles (and a default) before creating
@@ -63,9 +66,10 @@ export default function Home() {
 				const data = await results.json();
 
 				console.log("Created default profile:", data);
-				setProfile(data);
+				setProfile(Array.isArray(data) ? data[0] ?? data : data);
 			} catch (err) {
 				console.error(err.message);
+				defaultProfileCreatedForUser.current = null;
 			}
 		};
 
@@ -97,7 +101,7 @@ export default function Home() {
 				/>
 			)}
 
-			{user ? <VirtualRoom /> : <CircularProgress size={100}/>}
+			{user ? <VirtualRoom initialProfile={profile} /> : <CircularProgress size={100}/>}
 		</Box>
 	);
 }

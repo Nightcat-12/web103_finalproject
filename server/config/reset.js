@@ -1,37 +1,38 @@
-  import { pool } from './database.js'
-import './dotenv.js'
-import { shopItems } from '../../client/src/data/shopItems.js'
+import { pool } from "./database.js";
+import "./dotenv.js";
+import { shopItems } from "../../client/src/data/shopItems.js";
 
-  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const runQueryWithRetry = async (query, label, retries = 3) => {
-    let attempt = 0
+const runQueryWithRetry = async (query, label, retries = 3) => {
+	let attempt = 0;
 
-    while (attempt <= retries) {
-      try {
-        await pool.query(query)
-        return true
-      } catch (err) {
-        const isRetryable = err?.code === 'ECONNRESET' || err?.code === 'ETIMEDOUT'
+	while (attempt <= retries) {
+		try {
+			await pool.query(query);
+			return true;
+		} catch (err) {
+			const isRetryable =
+				err?.code === "ECONNRESET" || err?.code === "ETIMEDOUT";
 
-        if (!isRetryable || attempt === retries) {
-          console.error(`⚠️ Error creating ${label} table\n${err}`)
-          return false
-        }
+			if (!isRetryable || attempt === retries) {
+				console.error(`⚠️ Error creating ${label} table\n${err}`);
+				return false;
+			}
 
-        const backoffMs = 1000 * (attempt + 1)
-        console.warn(`⚠️ ${label}: ${err.code}. Retrying in ${backoffMs}ms...`)
-        await wait(backoffMs)
-      }
+			const backoffMs = 1000 * (attempt + 1);
+			console.warn(`⚠️ ${label}: ${err.code}. Retrying in ${backoffMs}ms...`);
+			await wait(backoffMs);
+		}
 
-      attempt += 1
-    }
+		attempt += 1;
+	}
 
-    return false
-  }
+	return false;
+};
 
-  const createUsersTable = async () => {
-    const createUsersTableQuery = `
+const createUsersTable = async () => {
+	const createUsersTableQuery = `
       DROP TABLE IF EXISTS users CASCADE;
 
       CREATE TABLE IF NOT EXISTS users (
@@ -41,18 +42,18 @@ import { shopItems } from '../../client/src/data/shopItems.js'
         coins INTEGER NOT NULL DEFAULT 0 CHECK (coins >= 0),
         createdAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
-    `
+    `;
 
-    const ok = await runQueryWithRetry(createUsersTableQuery, 'users')
-    if (ok) {
-      console.log('✅ users table created successfully!')
-    }
+	const ok = await runQueryWithRetry(createUsersTableQuery, "users");
+	if (ok) {
+		console.log("✅ users table created successfully!");
+	}
 
-    return ok
-  }
+	return ok;
+};
 
-  const createCatsTable = async () => {
-    const createCatsTableQuery = `
+const createCatsTable = async () => {
+	const createCatsTableQuery = `
       DROP TABLE IF EXISTS cats CASCADE;
 
       CREATE TABLE IF NOT EXISTS cats (
@@ -62,18 +63,18 @@ import { shopItems } from '../../client/src/data/shopItems.js'
         image TEXT,
         energy INTEGER NOT NULL DEFAULT 100 CHECK (energy >= 0)
       );
-    `
+    `;
 
-    const ok = await runQueryWithRetry(createCatsTableQuery, 'cats')
-    if (ok) {
-      console.log('✅ cats table created successfully!')
-    }
+	const ok = await runQueryWithRetry(createCatsTableQuery, "cats");
+	if (ok) {
+		console.log("✅ cats table created successfully!");
+	}
 
-    return ok
-  }
+	return ok;
+};
 
-  const createPomodoroProfilesTable = async () => {
-    const createPomodoroProfilesTableQuery = `
+const createPomodoroProfilesTable = async () => {
+	const createPomodoroProfilesTableQuery = `
       DROP TABLE IF EXISTS pomodoro_profiles CASCADE;
 
       CREATE TABLE IF NOT EXISTS pomodoro_profiles (
@@ -89,18 +90,21 @@ import { shopItems } from '../../client/src/data/shopItems.js'
       CREATE UNIQUE INDEX IF NOT EXISTS one_default_profile_per_user
         ON pomodoro_profiles (userId)
         WHERE isDefault = TRUE;
-    `
+    `;
 
-    const ok = await runQueryWithRetry(createPomodoroProfilesTableQuery, 'pomodoro_profiles')
-    if (ok) {
-      console.log('✅ pomodoro_profiles table created successfully!')
-    }
+	const ok = await runQueryWithRetry(
+		createPomodoroProfilesTableQuery,
+		"pomodoro_profiles",
+	);
+	if (ok) {
+		console.log("✅ pomodoro_profiles table created successfully!");
+	}
 
-    return ok
-  }
+	return ok;
+};
 
-  const createStudySessionsTable = async () => {
-    const createStudySessionsTableQuery = `
+const createStudySessionsTable = async () => {
+	const createStudySessionsTableQuery = `
       DROP TABLE IF EXISTS study_sessions CASCADE;
 
       CREATE TABLE IF NOT EXISTS study_sessions (
@@ -111,18 +115,21 @@ import { shopItems } from '../../client/src/data/shopItems.js'
         endTime TIMESTAMPTZ,
         coinsEarned INTEGER NOT NULL DEFAULT 0 CHECK (coinsEarned >= 0)
       );
-    `
+    `;
 
-    const ok = await runQueryWithRetry(createStudySessionsTableQuery, 'study_sessions')
-    if (ok) {
-      console.log('✅ study_sessions table created successfully!')
-    }
+	const ok = await runQueryWithRetry(
+		createStudySessionsTableQuery,
+		"study_sessions",
+	);
+	if (ok) {
+		console.log("✅ study_sessions table created successfully!");
+	}
 
-    return ok
-  }
+	return ok;
+};
 
-  const createShopItemsTable = async () => {
-    const createShopItemsTableQuery = `
+const createShopItemsTable = async () => {
+	const createShopItemsTableQuery = `
       DROP TABLE IF EXISTS shop_items CASCADE;
 
       CREATE TABLE IF NOT EXISTS shop_items (
@@ -132,18 +139,18 @@ import { shopItems } from '../../client/src/data/shopItems.js'
         category TEXT NOT NULL,
         price INTEGER NOT NULL CHECK (price >= 0)
       );
-    `
+    `;
 
-    const ok = await runQueryWithRetry(createShopItemsTableQuery, 'shop_items')
-    if (ok) {
-      console.log('✅ shop_items table created successfully!')
-    }
+	const ok = await runQueryWithRetry(createShopItemsTableQuery, "shop_items");
+	if (ok) {
+		console.log("✅ shop_items table created successfully!");
+	}
 
-    return ok
-  }
+	return ok;
+};
 
-  const createInventoryTable = async () => {
-    const createInventoryTableQuery = `
+const createInventoryTable = async () => {
+	const createInventoryTableQuery = `
       DROP TABLE IF EXISTS inventory CASCADE;
 
       CREATE TABLE IF NOT EXISTS inventory (
@@ -155,18 +162,18 @@ import { shopItems } from '../../client/src/data/shopItems.js'
         acquiredAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         UNIQUE (userId, shopItemId)
       );
-    `
+    `;
 
-    const ok = await runQueryWithRetry(createInventoryTableQuery, 'inventory')
-    if (ok) {
-      console.log('✅ inventory table created successfully!')
-    }
+	const ok = await runQueryWithRetry(createInventoryTableQuery, "inventory");
+	if (ok) {
+		console.log("✅ inventory table created successfully!");
+	}
 
-    return ok
-  }
+	return ok;
+};
 
-  const createTasksTable = async () => {
-    const createTasksTableQuery = `
+const createTasksTable = async () => {
+	const createTasksTableQuery = `
       DROP TABLE IF EXISTS tasks CASCADE;
 
       CREATE TABLE IF NOT EXISTS tasks (
@@ -183,81 +190,73 @@ import { shopItems } from '../../client/src/data/shopItems.js'
 
       CREATE INDEX IF NOT EXISTS idx_tasks_created_at
       ON tasks (createdAt DESC);
-    `
+    `;
 
-  try {
-    const res = await pool.query(createTasksTableQuery)
-    console.log('✅ tasks table created successfully!')
-  } catch (err) {
-    console.error(`⚠️ Error creating tasks table\n${err}`)
-  }
-}
+	try {
+		const res = await pool.query(createTasksTableQuery);
+		console.log("✅ tasks table created successfully!");
+	} catch (err) {
+		console.error(`⚠️ Error creating tasks table\n${err}`);
+	}
+};
 
-const seedShopItemsTable = async() => {
-  await createShopItemsTable()
+const seedShopItemsTable = async () => {
+	await createShopItemsTable();
 
-  console.log("Seeding shop items")
+	console.log("Seeding shop items");
 
-  shopItems.forEach((item) => {
-    const insertQuery = {
-      text: 'INSERT INTO shop_items (name, image, category, price) VALUES ($1, $2, $3, $4)'
-    }
+	shopItems.forEach((item) => {
+		const insertQuery = {
+			text: "INSERT INTO shop_items (name, image, category, price) VALUES ($1, $2, $3, $4)",
+		};
 
-    const values = [
-      item.name,
-      item.img,
-      item.category,
-      item.price
-    ]
+		const values = [item.name, item.img, item.category, item.price];
 
-    pool.query(insertQuery, values, (err,res) => {
-      if (err) {
-        console.error('⚠️ error inserting shop item', err)
-        return
-      }
+		pool.query(insertQuery, values, (err, res) => {
+			if (err) {
+				console.error("⚠️ error inserting shop item", err);
+				return;
+			}
 
-      console.log(`✅ ${item.name} added successfully`)
-    })
-  })
+			console.log(`✅ ${item.name} added successfully`);
+		});
+	});
+};
 
-}
+const seedDatabase = async () => {
+	let hasFailures = false;
 
+	try {
+		const steps = [
+			createUsersTable,
+			createCatsTable,
+			createPomodoroProfilesTable,
+			seedShopItemsTable,
+			createStudySessionsTable,
+			createInventoryTable,
+			createTasksTable,
+		];
 
-  const seedDatabase = async () => {
-    let hasFailures = false
+		for (const step of steps) {
+			const ok = await step();
+			if (!ok) {
+				hasFailures = true;
+			}
+		}
 
-    try {
-      const steps = [
-        createUsersTable,
-        createCatsTable,
-        createPomodoroProfilesTable,
-        seedShopItemsTable,
-        createStudySessionsTable,
-        createShopItemsTable,
-        createInventoryTable,
-        createTasksTable,
-      ]
+		if (hasFailures) {
+			console.error("⚠️ database reset finished with failures");
+			process.exitCode = 1;
+			return;
+		}
 
-      for (const step of steps) {
-        const ok = await step()
-        if (!ok) {
-          hasFailures = true
-        }
-      }
+		console.log("✅ database tables created successfully!");
+	} catch (err) {
+		console.error(`⚠️ Error seeding database\n${err}`);
+		process.exitCode = 1;
+	} finally {
+		await pool.end();
+	}
+};
 
-      if (hasFailures) {
-        console.error('⚠️ database reset finished with failures')
-        process.exitCode = 1
-        return
-      }
-
-      console.log('✅ database tables created successfully!')
-    } catch (err) {
-      console.error(`⚠️ Error seeding database\n${err}`)
-      process.exitCode = 1
-    } finally {
-      await pool.end()
-    }
-  }
-
-  seedDatabase()
+seedDatabase();
