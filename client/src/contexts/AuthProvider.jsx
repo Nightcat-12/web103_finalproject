@@ -90,7 +90,7 @@ export function AuthProvider({ children }) {
       // This listener handles all auth state changes, including after a successful popup sign-in
       setUser(currentUser);
       setLoading(false);
-      console.log("onAuthStateChanged: ", currentUser);
+      //console.log("onAuthStateChanged: ", currentUser);
     });
 
     return () => unsubscribe(); // Clean up the listener on unmount

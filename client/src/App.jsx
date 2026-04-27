@@ -42,6 +42,7 @@ function App() {
             <Route path="shop/:id" element={<ShopItemDetails />} />
             <Route path="dev" element={<Testing/>}/>
           </Route>
+          <Route path="/dev" element={<Testing/>}/>
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
