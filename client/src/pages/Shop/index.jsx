@@ -9,6 +9,7 @@ import {
     CircularProgress
 } from "@mui/material";
 
+import StoreIcon from '@mui/icons-material/Store';
 import ShopCard from "../../components/ShopCard.jsx";
 import { useState, useEffect } from "react";
 
@@ -39,6 +40,8 @@ export default function Shop() {
     var lamps = shopItems.filter(e => e.category == 'Lamps')
     var desks = shopItems.filter(e => e.category == 'Desks')
     var plants = shopItems.filter(e => e.category == 'Plants')
+    var frames = shopItems.filter(e => e.category == 'Frames')
+
 
     function filterByLamps() {
         setFilteredShopItems(lamps)
@@ -50,6 +53,10 @@ export default function Shop() {
 
     function filterByPlants() {
         setFilteredShopItems(plants)
+    }
+
+    function filterByFrames() {
+        setFilteredShopItems(frames)
     }
     
     function handleFilterClick(category) {
@@ -73,8 +80,8 @@ export default function Shop() {
                         alignItems: {xs: 'flex-start', md: 'center'},
                     }}
                 >
-                    <Typography variant="h2" sx={{ paddingLeft: 4 }}>
-                       ⋆˚꩜｡ PawMart ⋆˚꩜｡
+                    <Typography variant="h2" sx={{ paddingLeft: 5 }}>
+                       <StoreIcon  sx={{ fontSize: 70, color: 'primary.main', position: 'relative', top: '10px' }}/>PawMart
                     </Typography>
                     <Box sx={{ 
                         alignContent:'center', 
@@ -96,7 +103,11 @@ export default function Shop() {
                         <Button 
                             variant= {activeFilter === 'Plants' ? 'contained': 'outlined'} 
                             onClick={() => handleFilterClick('Plants')}
-                        >Plants</Button>                        
+                        >Plants</Button>
+                        <Button 
+                            variant= {activeFilter === 'Frames' ? 'contained': 'outlined'} 
+                            onClick={() => handleFilterClick('Frames')}
+                        >Frames</Button>                         
                     </Box>
 
                 </Stack>               
