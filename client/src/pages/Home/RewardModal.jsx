@@ -84,7 +84,6 @@ export default function RewardModal({
 
 						<Stack direction="row" spacing={1} sx={{display: "flex", alignItems: "center", justifyContent: "center"}}>
                             <AttentionSeeker effect="tada">
-
                             <PawCoin/>
                             </AttentionSeeker>
 							<Typography> x {getRewardedCoins()}</Typography>
