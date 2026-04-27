@@ -48,6 +48,34 @@ const addItemToInventory = async (req, res) => {
 			return res.status(400).json({ error: "userId is required" });
 		}
 
+		// Start a transaction: verify price and user coins, then upsert inventory and deduct coins
+		await pool.query('BEGIN');
+
+		// get price for the shop item
+		const priceRes = await pool.query(
+			'SELECT price FROM shop_items WHERE id = $1',
+			[shopItemId]
+		);
+		if (priceRes.rows.length === 0) {
+			await pool.query('ROLLBACK');
+			return res.status(404).json({ error: 'Shop item not found' });
+		}
+		const price = Number(priceRes.rows[0].price || 0);
+		const totalCost = price * Number(quantity || 1);
+
+		// get user's current coins
+		const userRes = await pool.query('SELECT coins FROM users WHERE uid = $1 FOR UPDATE', [userId]);
+		if (userRes.rows.length === 0) {
+			await pool.query('ROLLBACK');
+			return res.status(404).json({ error: 'User not found' });
+		}
+		const userCoins = Number(userRes.rows[0].coins || 0);
+
+		if (userCoins < totalCost) {
+			await pool.query('ROLLBACK');
+			return res.status(409).json({ error: 'Insufficient coins' });
+		}
+
 		const insertQuery = `
 			INSERT INTO inventory (userId, shopItemId, quantity)
 			VALUES ($1, $2, $3)
@@ -56,13 +84,23 @@ const addItemToInventory = async (req, res) => {
 			RETURNING *
 		`;
 
-		const results = await pool.query(insertQuery, [
-			userId,
-			shopItemId,
-			quantity,
-		]);
-		res.status(200).json(results.rows[0]);
+		const inventoryRes = await pool.query(insertQuery, [userId, shopItemId, quantity]);
+
+		// deduct coins
+		const updateUserRes = await pool.query(
+			`UPDATE users SET coins = coins - $1 WHERE uid = $2 RETURNING *`,
+			[totalCost, userId]
+		);
+
+		await pool.query('COMMIT');
+
+		res.status(200).json({ inventory: inventoryRes.rows[0], user: updateUserRes.rows[0] });
 	} catch (err) {
+		try {
+			await pool.query('ROLLBACK');
+		} catch (e) {
+			/* ignore rollback errors */
+		}
 		res.status(409).json({ error: err.message });
 	}
 };

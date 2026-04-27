@@ -13,8 +13,16 @@ export default function BuyButton({ shopItemId, onSuccess, onError, ...rest }) {
     if (!user?.uid || purchasing) return;
     setPurchasing(true);
     try {
-      await addToInventory(shopItemId, user.uid);
-      onSuccess?.();
+      const data = await addToInventory(shopItemId, user.uid);
+      // dispatch global event with updated coins when available
+      if (data?.user?.coins != null) {
+        try {
+          window.dispatchEvent(new CustomEvent('userCoinsUpdated', { detail: { coins: Number(data.user.coins) } }));
+        } catch (e) {
+          /* ignore dispatch errors */
+        }
+      }
+      onSuccess?.(data);
     } catch (err) {
       onError?.(err);
     } finally {
