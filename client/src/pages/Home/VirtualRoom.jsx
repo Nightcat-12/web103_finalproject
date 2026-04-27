@@ -2,13 +2,15 @@
 import { Box, Card, Paper, Typography, Fab, Stack, Badge } from "@mui/material";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import TasksDrawer from "./TasksDrawer";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { Bounce } from "react-awesome-reveal";
 import SettingsIcon from "@mui/icons-material/Settings";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ProfilesDrawer from "./ProfilesDrawer";
 import AuthContext from "../../contexts/AuthContext";
 import PauseIcon from "@mui/icons-material/Pause";
+import SkipNextIcon from "@mui/icons-material/SkipNext";
+import RewardModal from "./RewardModal";
 
 const slots = {
 	desk: {
@@ -123,6 +125,16 @@ export default function VirtualRoom() {
 	const [endTime, setEndTime] = useState(null);
 	const [mode, setMode] = useState("work"); // "work" | "break" | "longBreak"
 	const [sessionCount, setSessionCount] = useState(0);
+	const [showRewards, setShowRewards] = useState(false);
+	const [cat, setCat] = useState(null);
+	const [rewardMinutes, setRewardMinutes] = useState(0);
+	const [sessionTime, setSessionTime] = useState({
+		startTime: null,
+		endTime: null,
+		pausedTime: 0,
+		pauseStartTime: null,
+	});
+
 
 	const { user } = useContext(AuthContext);
 
@@ -139,33 +151,146 @@ export default function VirtualRoom() {
 	const startTimer = () => {
 		if (isRunning) return;
 
-		setEndTime(Date.now() + remainingSeconds * 1000);
+		const now = Date.now();
+
+		setSessionTime((current) => {
+			const pauseDuration = current.pauseStartTime
+				? now - current.pauseStartTime
+				: 0;
+
+			return {
+				...current,
+				startTime: current.startTime ?? now,
+				pausedTime: current.pausedTime + pauseDuration,
+				pauseStartTime: null,
+			};
+		});
+
+		setEndTime((currentEndTime) =>
+			currentEndTime ?? Date.now() + remainingSeconds * 1000,
+		);
 		setIsRunning(true);
+	};
+
+	const pauseTimer = () => {
+		if (!isRunning) return;
+
+		setSessionTime((current) => ({
+			...current,
+			pauseStartTime: current.pauseStartTime ?? Date.now(),
+		}));
+		setIsRunning(false);
 	};
 
 	const stopTimer = () => {
 		setIsRunning(false);
+		setEndTime(null);
+	};
+
+	const finalizeWorkSession = useCallback(() => {
+		const now = Date.now();
+		const pauseDuration = sessionTime.pauseStartTime
+			? now - sessionTime.pauseStartTime
+			: 0;
+		const totalPausedTime = sessionTime.pausedTime + pauseDuration;
+		const startTime = sessionTime.startTime ?? now;
+		const endTimeMs = now - totalPausedTime;
+
+		const completedMinutes = Math.max(
+			0,
+			Math.floor((endTimeMs - startTime) / 60000),
+		);
+		const coinsEarned = Math.max(
+			0,
+			(Math.min(completedMinutes, cat?.energy ?? 0) + 5 * 0) * 3,
+		);
+
+		setRewardMinutes(completedMinutes);
+		setSessionTime((current) => ({
+			...current,
+			endTime: endTimeMs,
+			pausedTime: totalPausedTime,
+			pauseStartTime: null,
+		}));
+
+		const startTimeISO = new Date(startTime).toISOString();
+		const endTimeISO = new Date(endTimeMs).toISOString();
+
+		const persistSessionAndCoins = async () => {
+			try {
+				await fetch("/api/sessions", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						userId: user?.uid,
+						profileId: selectedProfile?.id,
+						startTime: startTimeISO,
+						endTime: endTimeISO,
+						coinsEarned,
+					}),
+				});
+
+				const userResponse = await fetch(`/api/users/${user?.uid}`);
+				if (!userResponse.ok) {
+					throw new Error("Failed to fetch user for coin update");
+				}
+
+				const userData = await userResponse.json();
+				const currentCoins = Number(userData?.coins ?? 0);
+				const updatedCoins = currentCoins + coinsEarned;
+
+				const updateResponse = await fetch(`/api/users/${user?.uid}`, {
+					method: "PATCH",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ coins: updatedCoins }),
+				});
+
+				if (!updateResponse.ok) {
+					throw new Error("Failed to update user coins");
+				}
+			} catch (err) {
+				console.error("Failed to save session and update coins:", err);
+			}
+		};
+
+		persistSessionAndCoins();
+
+		setShowRewards(true);
+	}, [cat?.energy, selectedProfile?.id, sessionTime, user?.uid]);
+
+	const skipToNextMode = () => {
+		stopTimer();
+
+		if (mode === "work") {
+			const nextCount = sessionCount + 1;
+			setSessionCount(nextCount);
+			finalizeWorkSession();
+			setMode(nextCount % 4 === 0 ? "longbreak" : "break");
+			return;
+		}
+
+		setMode("work");
 	};
 
 	useEffect(() => {
 		if (!isRunning) return;
 
 		const interval = setInterval(() => {
-			const remaining = Math.max(0, endTime - Date.now());
+			const remaining = Math.max(
+				0,
+				endTime - (Date.now() - sessionTime.pausedTime),
+			);
 
 			setRemainingSeconds(Math.ceil(remaining / 1000));
 
 			if (remaining <= 0) {
-				setIsRunning(false);
+				stopTimer();
 
-				if (mode == "work") {
+				if (mode === "work") {
 					const nextCount = sessionCount + 1;
 					setSessionCount(nextCount);
-					if (nextCount % 4 == 0) {
-						setMode("longbreak");
-					} else {
-						setMode("break");
-					}
+					finalizeWorkSession();
+					setMode(nextCount % 4 === 0 ? "longbreak" : "break");
 				} else {
 					setMode("work");
 				}
@@ -173,7 +298,7 @@ export default function VirtualRoom() {
 		}, 250);
 
 		return () => clearInterval(interval);
-	}, [isRunning, endTime, mode]);
+	}, [isRunning, endTime, mode, sessionCount, sessionTime.pausedTime, finalizeWorkSession]);
 
 	useEffect(() => {
 		const raw = selectedProfile?.timeon;
@@ -199,8 +324,29 @@ export default function VirtualRoom() {
 		setAllProfiles(data);
 	};
 
+	const refreshCat = async () => {
+		if (!user?.uid) return;
+
+		const results = await fetch(`/api/cats/${user.uid}`);
+		const data = await results.json();
+
+		setCat(data?.[0] ?? null);
+	};
+
+	const completeSession = async () => {
+		setShowRewards(false);
+		setSessionTime({
+			startTime: null,
+			endTime: null,
+			pausedTime: 0,
+			pauseStartTime: null,
+		});
+		setRewardMinutes(0);
+	}
+
 	useEffect(() => {
 		refreshProfiles();
+		refreshCat();
 	}, [user]);
 
 	useEffect(() => {
@@ -212,6 +358,10 @@ export default function VirtualRoom() {
 
 		setRemainingSeconds(minutes * 60);
 	}, [selectedProfile, mode]);
+
+	useEffect(() => {
+		console.log("Reward Minutes:" , rewardMinutes)
+	}, [rewardMinutes])
 
 	return (
 		<Box
@@ -264,8 +414,11 @@ export default function VirtualRoom() {
 						>
 							<Box sx={{ width: 1, height: 1 }} />
 						</Badge>
-						<Typography variant="caption" sx={{ position: "absolute", top: 6, color: "#FFFFFF"}}>
-							{mode.toUpperCase()}
+						<Typography
+							variant="caption"
+							sx={{ position: "absolute", top: 6, color: "#FFFFFF" }}
+						>
+							{mode == "longbreak" ? "LONG BREAK" : mode.toUpperCase()}
 						</Typography>
 						{selectedProfile?.timeon != null && (
 							<Bounce>
@@ -341,11 +494,25 @@ export default function VirtualRoom() {
 								height: { xs: 30, sm: 46, md: 54 },
 							}}
 							onClick={() => {
-								isRunning ? stopTimer() : startTimer();
+								isRunning ? pauseTimer() : startTimer();
 							}}
 						>
 							{isRunning ? <PauseIcon /> : <PlayArrowIcon />}
 						</Fab>
+						{isRunning && (
+							<Bounce>
+								<Fab
+									color="primary"
+									sx={{
+										width: { xs: 30, sm: 46, md: 54 },
+										height: { xs: 30, sm: 46, md: 54 },
+									}}
+									onClick={skipToNextMode}
+								>
+									<SkipNextIcon />
+								</Fab>
+							</Bounce>
+						)}
 					</Stack>
 				</Stack>
 
@@ -360,6 +527,14 @@ export default function VirtualRoom() {
 					onProfilesChanged={refreshProfiles}
 					selectedProfile={selectedProfile}
 					setSelectedProfile={setSelectedProfile}
+				/>
+
+				<RewardModal
+					open={showRewards}
+					onClose={completeSession}
+					minutes={rewardMinutes}
+					tasks={0}
+					cat={cat}
 				/>
 			</Box>
 		</Box>
