@@ -103,7 +103,7 @@ function Slot({ label, sx, item }) {
 	);
 }
 
-export default function VirtualRoom() {
+export default function VirtualRoom({ initialProfile = null }) {
 	const [items, setItems] = useState({
 		desk: {
 			img: "https://static.vecteezy.com/system/resources/thumbnails/046/797/124/small/wooden-office-desk-with-lamp-table-isolated-on-transparent-background-png.png",
@@ -118,8 +118,10 @@ export default function VirtualRoom() {
 	});
 	const [isTasksOpen, setIsTasksOpen] = useState(false);
 	const [isProfilesOpen, setIsProfilesOpen] = useState(false);
-	const [selectedProfile, setSelectedProfile] = useState();
-	const [allProfiles, setAllProfiles] = useState();
+	const [selectedProfile, setSelectedProfile] = useState(initialProfile);
+	const [allProfiles, setAllProfiles] = useState(
+		initialProfile ? [initialProfile] : [],
+	);
 	const [remainingSeconds, setRemainingSeconds] = useState(0);
 	const [isRunning, setIsRunning] = useState(false);
 	const [endTime, setEndTime] = useState(null);
@@ -134,6 +136,7 @@ export default function VirtualRoom() {
 		pausedTime: 0,
 		pauseStartTime: null,
 	});
+	const [completedTasks, setCompletedTasks] = useState(0)
 
 
 	const { user } = useContext(AuthContext);
@@ -187,7 +190,7 @@ export default function VirtualRoom() {
 		setEndTime(null);
 	};
 
-	const finalizeWorkSession = useCallback(() => {
+	const finalizeWorkSession = useCallback(async () => {
 		const now = Date.now();
 		const pauseDuration = sessionTime.pauseStartTime
 			? now - sessionTime.pauseStartTime
@@ -200,10 +203,6 @@ export default function VirtualRoom() {
 			0,
 			Math.floor((endTimeMs - startTime) / 60000),
 		);
-		const coinsEarned = Math.max(
-			0,
-			(Math.min(completedMinutes, cat?.energy ?? 0) + 5 * 0) * 3,
-		);
 
 		setRewardMinutes(completedMinutes);
 		setSessionTime((current) => ({
@@ -215,6 +214,26 @@ export default function VirtualRoom() {
 
 		const startTimeISO = new Date(startTime).toISOString();
 		const endTimeISO = new Date(endTimeMs).toISOString();
+
+		const getTasksCompleted = async () => {
+			try {
+				const res = await fetch(`/api/tasks/${user?.uid}`);
+				const data = await res.json();
+				const completedTasksList = data.filter((task) => task.completed === true);
+
+				setCompletedTasks(completedTasksList.length);
+				return completedTasksList.length;
+			} catch (err) {
+				console.error("Failed to fetch tasks: ", err);
+				return 0;
+			}
+		};
+
+		const completedTasksCount = await getTasksCompleted();
+		const coinsEarned = Math.max(
+			0,
+			(Math.min(completedMinutes, cat?.energy ?? 0) + 5 * completedTasksCount) * 3,
+		);
 
 		const persistSessionAndCoins = async () => {
 			try {
@@ -253,7 +272,7 @@ export default function VirtualRoom() {
 			}
 		};
 
-		persistSessionAndCoins();
+		await persistSessionAndCoins();
 
 		setShowRewards(true);
 	}, [cat?.energy, selectedProfile?.id, sessionTime, user?.uid]);
@@ -314,7 +333,22 @@ export default function VirtualRoom() {
 		});
 	}, [selectedProfile]);
 
-	const refreshProfiles = async () => {
+	useEffect(() => {
+		if (initialProfile) {
+			setSelectedProfile(initialProfile);
+			setAllProfiles((currentProfiles) => {
+				if (!currentProfiles || currentProfiles.length === 0) {
+					return [initialProfile];
+				}
+
+				return currentProfiles.some((profile) => profile.id === initialProfile.id)
+					? currentProfiles
+					: [initialProfile, ...currentProfiles];
+			});
+		}
+	}, [initialProfile]);
+
+	const refreshProfiles = useCallback(async () => {
 		if (!user?.uid) return;
 
 		const results = await fetch(`/api/pomodoro_profiles/${user.uid}`);
@@ -322,16 +356,16 @@ export default function VirtualRoom() {
 
 		setSelectedProfile(data[0]);
 		setAllProfiles(data);
-	};
+	}, [user?.uid]);
 
-	const refreshCat = async () => {
+	const refreshCat = useCallback(async () => {
 		if (!user?.uid) return;
 
 		const results = await fetch(`/api/cats/${user.uid}`);
 		const data = await results.json();
 
 		setCat(data?.[0] ?? null);
-	};
+	}, [user?.uid]);
 
 	const completeSession = async () => {
 		setShowRewards(false);
@@ -347,7 +381,7 @@ export default function VirtualRoom() {
 	useEffect(() => {
 		refreshProfiles();
 		refreshCat();
-	}, [user]);
+	}, [refreshProfiles, refreshCat]);
 
 	useEffect(() => {
 		const durations = getDurations(selectedProfile);
@@ -533,7 +567,7 @@ export default function VirtualRoom() {
 					open={showRewards}
 					onClose={completeSession}
 					minutes={rewardMinutes}
-					tasks={0}
+					tasks={completedTasks}
 					cat={cat}
 				/>
 			</Box>
