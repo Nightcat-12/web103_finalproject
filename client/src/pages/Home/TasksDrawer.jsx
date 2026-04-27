@@ -243,11 +243,43 @@ export default function TasksDrawer({ open, onClose }) {
 									disabled={saving}
 									sx={{
 										"& .MuiInputBase-input": { color: "white" },
+										"& .MuiInputBase-input.Mui-disabled": {
+											WebkitTextFillColor: "white",
+										},
+										"& input:-webkit-autofill": {
+											WebkitBoxShadow: "0 0 0 1000px rgba(255,255,255,0.08) inset",
+											WebkitTextFillColor: "white",
+											caretColor: "white",
+										},
+										"& input:-webkit-autofill:hover": {
+											WebkitBoxShadow: "0 0 0 1000px rgba(255,255,255,0.08) inset",
+											WebkitTextFillColor: "white",
+										},
+										"& input:-webkit-autofill:focus": {
+											WebkitBoxShadow: "0 0 0 1000px rgba(255,255,255,0.08) inset",
+											WebkitTextFillColor: "white",
+										},
 										"& .MuiInputLabel-root": {
 											color: "rgba(255,255,255,0.85)",
 										},
+										"& .MuiInputLabel-root.Mui-disabled": {
+											color: "rgba(255,255,255,0.75)",
+										},
 										"& .MuiOutlinedInput-notchedOutline": {
 											borderColor: "rgba(255,255,255,0.5)",
+										},
+										"& .MuiOutlinedInput-root": {
+											backgroundColor: "rgba(255,255,255,0.08)",
+											transition: "background-color 150ms ease, border-color 150ms ease",
+										},
+										"& .MuiOutlinedInput-root:hover": {
+											backgroundColor: "rgba(255,255,255,0.12)",
+										},
+										"& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+											borderColor: "white",
+										},
+										"& .MuiOutlinedInput-root.Mui-disabled": {
+											backgroundColor: "rgba(255,255,255,0.06)",
 										},
 									}}
 								/>
@@ -256,6 +288,21 @@ export default function TasksDrawer({ open, onClose }) {
 									onClick={createTask}
 									disabled={saving}
 									fullWidth
+									disableElevation
+									sx={{
+										backgroundColor: "white",
+										color: "primary.main",
+										"&:hover": {
+											backgroundColor: "#f4f7ff",
+										},
+										"&:active": {
+											backgroundColor: "#f4f7ff",
+										},
+										"&.Mui-disabled": {
+											backgroundColor: "white",
+											color: "rgba(46, 46, 46, 0.65)",
+										},
+									}}
 								>
 									Add Task
 								</Button>
@@ -273,13 +320,33 @@ export default function TasksDrawer({ open, onClose }) {
 								fullWidth
 								sx={{
 									"& .MuiToggleButton-root": {
-										color: "white",
-										borderColor: "rgba(255,255,255,0.45)",
-										flex: 1,
+											color: "white",
+											borderColor: "rgba(255,255,255,0.45)",
+											backgroundColor: "rgba(255,255,255,0.08)",
+											flex: 1,
+											"&:hover": {
+												backgroundColor: "rgba(255,255,255,0.16)",
+											},
+											"&.Mui-disabled": {
+												color: "rgba(255,255,255,0.75)",
+												borderColor: "rgba(255,255,255,0.25)",
+												backgroundColor: "rgba(255,255,255,0.04)",
+											},
 									},
 									"& .Mui-selected": {
-										backgroundColor: "rgba(255,255,255,0.22)",
+											color: "white",
+											backgroundColor: "rgba(255,255,255,0.22)",
+											"&:hover": {
+												backgroundColor: "rgba(255,255,255,0.26)",
+											},
 									},
+										"& .MuiToggleButton-root.Mui-selected": {
+											color: "white",
+											backgroundColor: "rgba(255,255,255,0.22)",
+										},
+										"& .MuiToggleButton-root.Mui-selected:hover": {
+											backgroundColor: "rgba(255,255,255,0.26)",
+										},
 								}}
 							>
 								<ToggleButton value="all">All</ToggleButton>
@@ -353,8 +420,34 @@ export default function TasksDrawer({ open, onClose }) {
 															disabled={saving}
 															sx={{
 																"& .MuiInputBase-input": { color: "white" },
+																"& .MuiInputBase-input.Mui-disabled": {
+																	WebkitTextFillColor: "white",
+																},
+																"& input:-webkit-autofill": {
+																	WebkitBoxShadow: "0 0 0 1000px rgba(255,255,255,0.08) inset",
+																	WebkitTextFillColor: "white",
+																	caretColor: "white",
+																},
+																"& input:-webkit-autofill:hover": {
+																	WebkitBoxShadow: "0 0 0 1000px rgba(255,255,255,0.08) inset",
+																	WebkitTextFillColor: "white",
+																},
+																"& input:-webkit-autofill:focus": {
+																	WebkitBoxShadow: "0 0 0 1000px rgba(255,255,255,0.08) inset",
+																	WebkitTextFillColor: "white",
+																},
 																"& .MuiOutlinedInput-notchedOutline": {
 																	borderColor: "rgba(255,255,255,0.4)",
+																},
+																"& .MuiOutlinedInput-root": {
+																	backgroundColor: "rgba(255,255,255,0.08)",
+																	transition: "background-color 150ms ease, border-color 150ms ease",
+																},
+																"& .MuiOutlinedInput-root:hover": {
+																	backgroundColor: "rgba(255,255,255,0.12)",
+																},
+																"& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+																	borderColor: "white",
 																},
 															}}
 														/>
@@ -388,6 +481,17 @@ export default function TasksDrawer({ open, onClose }) {
 																variant="contained"
 																onClick={saveTaskEdit}
 																disabled={saving}
+																disableElevation
+																sx={{
+																	backgroundColor: "white",
+																	color: "primary.main",
+																	"&:hover": { backgroundColor: "#f4f7ff" },
+																	"&:active": { backgroundColor: "#f4f7ff" },
+																	"&.Mui-disabled": {
+																		backgroundColor: "white",
+																		color: "rgba(46, 46, 46, 0.65)",
+																	},
+																}}
 															>
 																Save
 															</Button>
@@ -403,6 +507,10 @@ export default function TasksDrawer({ open, onClose }) {
 																sx={{
 																	color: "white",
 																	borderColor: "rgba(255,255,255,0.55)",
+																	backgroundColor: "rgba(255,255,255,0.06)",
+																	"&:hover": {
+																		backgroundColor: "rgba(255,255,255,0.12)",
+																	},
 																}}
 															>
 																Cancel
@@ -422,6 +530,10 @@ export default function TasksDrawer({ open, onClose }) {
 																sx={{
 																	color: "white",
 																	borderColor: "rgba(255,255,255,0.55)",
+																	backgroundColor: "rgba(255,255,255,0.06)",
+																	"&:hover": {
+																		backgroundColor: "rgba(255,255,255,0.12)",
+																	},
 																}}
 															>
 																Edit
@@ -435,6 +547,10 @@ export default function TasksDrawer({ open, onClose }) {
 																sx={{
 																	borderColor: "rgba(255,255,255,0.4)",
 																	color: "white",
+																	backgroundColor: "rgba(255,255,255,0.06)",
+																	"&:hover": {
+																		backgroundColor: "rgba(255,255,255,0.12)",
+																	},
 																}}
 															>
 																Delete
