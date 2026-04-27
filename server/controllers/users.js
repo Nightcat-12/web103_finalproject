@@ -103,10 +103,11 @@ const updateUser = async(req, res) => {
             name = COALESCE($1, name), 
             profilePicture = COALESCE($2, profilePicture), 
             coins = COALESCE($3, coins)
+        WHERE uid = $4
         RETURNING *
     `
 
-    const results = await pool.query(updateQuery, [name, profilePicture, coins])
+    const results = await pool.query(updateQuery, [name, profilePicture, coins, uid])
     res.status(200).json(results.rows[0])
 
   } catch(err) {

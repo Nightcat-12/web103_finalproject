@@ -52,21 +52,25 @@ const addSession = async(req, res) => {
             return res.status(400).json({ error: 'userId and startTime are required' })
         }
 
+        const safeCoinsEarned = Number.isFinite(Number(coinsEarned))
+            ? Math.max(0, Number(coinsEarned))
+            : 0
+
         const createQuery = `
             INSERT INTO study_sessions (userId, profileId, startTime, endTime, coinsEarned)
             VALUES ($1, $2, $3, $4, $5)
             RETURNING *
         `
 
-        const results = await pool.query(createQuery, [
+        const sessionResults = await pool.query(createQuery, [
             userId,
             profileId,
             startTime,
             endTime,
-            coinsEarned,
+            safeCoinsEarned,
         ])
 
-        res.status(200).json(results.rows[0])
+        res.status(200).json(sessionResults.rows[0])
     } catch (err) {
         res.status(409).json({ error: err.message })
     }

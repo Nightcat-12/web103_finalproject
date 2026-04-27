@@ -1,8 +1,16 @@
 // client/src/pages/Home/VirtualRoom.jsx
-import { Box, Paper, Typography, Fab } from "@mui/material";
+import { Box, Card, Paper, Typography, Fab, Stack, Badge } from "@mui/material";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import TasksDrawer from "./TasksDrawer";
-import { useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { Bounce } from "react-awesome-reveal";
+import SettingsIcon from "@mui/icons-material/Settings";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import ProfilesDrawer from "./ProfilesDrawer";
+import AuthContext from "../../contexts/AuthContext";
+import PauseIcon from "@mui/icons-material/Pause";
+import SkipNextIcon from "@mui/icons-material/SkipNext";
+import RewardModal from "./RewardModal";
 
 const slots = {
 	desk: {
@@ -40,12 +48,11 @@ const slots = {
 		transform: "translate(-50%)",
 		width: "30%",
 		height: "20%",
-        backgroundColor: "rgba(0, 0, 0, 0.1)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 20,
-
+		backgroundColor: "rgba(0, 0, 0, 0.1)",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		borderRadius: 20,
 	},
 };
 
@@ -103,15 +110,258 @@ export default function VirtualRoom() {
 		},
 		floor1: { img: "" },
 		floor2: { img: "" },
-		wall: { img: "", },
-        timer: {
-            minutes: 60,
-            seconds: 0
-        }
+		wall: { img: "" },
+		timer: {
+			minutes: 0,
+			seconds: 0,
+		},
 	});
 	const [isTasksOpen, setIsTasksOpen] = useState(false);
+	const [isProfilesOpen, setIsProfilesOpen] = useState(false);
+	const [selectedProfile, setSelectedProfile] = useState();
+	const [allProfiles, setAllProfiles] = useState();
+	const [remainingSeconds, setRemainingSeconds] = useState(0);
+	const [isRunning, setIsRunning] = useState(false);
+	const [endTime, setEndTime] = useState(null);
+	const [mode, setMode] = useState("work"); // "work" | "break" | "longBreak"
+	const [sessionCount, setSessionCount] = useState(0);
+	const [showRewards, setShowRewards] = useState(false);
+	const [cat, setCat] = useState(null);
+	const [rewardMinutes, setRewardMinutes] = useState(0);
+	const [sessionTime, setSessionTime] = useState({
+		startTime: null,
+		endTime: null,
+		pausedTime: 0,
+		pauseStartTime: null,
+	});
 
-    const formatTime = (num) => num.toString().padStart(2, '0')
+
+	const { user } = useContext(AuthContext);
+
+	const getDurations = (profile) => {
+		if (!profile) return null;
+
+		return {
+			work: Number(profile.timeon),
+			break: Number(profile.timebreak),
+			longbreak: Number(profile.timelongbreak),
+		};
+	};
+
+	const startTimer = () => {
+		if (isRunning) return;
+
+		const now = Date.now();
+
+		setSessionTime((current) => {
+			const pauseDuration = current.pauseStartTime
+				? now - current.pauseStartTime
+				: 0;
+
+			return {
+				...current,
+				startTime: current.startTime ?? now,
+				pausedTime: current.pausedTime + pauseDuration,
+				pauseStartTime: null,
+			};
+		});
+
+		setEndTime((currentEndTime) =>
+			currentEndTime ?? Date.now() + remainingSeconds * 1000,
+		);
+		setIsRunning(true);
+	};
+
+	const pauseTimer = () => {
+		if (!isRunning) return;
+
+		setSessionTime((current) => ({
+			...current,
+			pauseStartTime: current.pauseStartTime ?? Date.now(),
+		}));
+		setIsRunning(false);
+	};
+
+	const stopTimer = () => {
+		setIsRunning(false);
+		setEndTime(null);
+	};
+
+	const finalizeWorkSession = useCallback(() => {
+		const now = Date.now();
+		const pauseDuration = sessionTime.pauseStartTime
+			? now - sessionTime.pauseStartTime
+			: 0;
+		const totalPausedTime = sessionTime.pausedTime + pauseDuration;
+		const startTime = sessionTime.startTime ?? now;
+		const endTimeMs = now - totalPausedTime;
+
+		const completedMinutes = Math.max(
+			0,
+			Math.floor((endTimeMs - startTime) / 60000),
+		);
+		const coinsEarned = Math.max(
+			0,
+			(Math.min(completedMinutes, cat?.energy ?? 0) + 5 * 0) * 3,
+		);
+
+		setRewardMinutes(completedMinutes);
+		setSessionTime((current) => ({
+			...current,
+			endTime: endTimeMs,
+			pausedTime: totalPausedTime,
+			pauseStartTime: null,
+		}));
+
+		const startTimeISO = new Date(startTime).toISOString();
+		const endTimeISO = new Date(endTimeMs).toISOString();
+
+		const persistSessionAndCoins = async () => {
+			try {
+				await fetch("/api/sessions", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						userId: user?.uid,
+						profileId: selectedProfile?.id,
+						startTime: startTimeISO,
+						endTime: endTimeISO,
+						coinsEarned,
+					}),
+				});
+
+				const userResponse = await fetch(`/api/users/${user?.uid}`);
+				if (!userResponse.ok) {
+					throw new Error("Failed to fetch user for coin update");
+				}
+
+				const userData = await userResponse.json();
+				const currentCoins = Number(userData?.coins ?? 0);
+				const updatedCoins = currentCoins + coinsEarned;
+
+				const updateResponse = await fetch(`/api/users/${user?.uid}`, {
+					method: "PATCH",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ coins: updatedCoins }),
+				});
+
+				if (!updateResponse.ok) {
+					throw new Error("Failed to update user coins");
+				}
+			} catch (err) {
+				console.error("Failed to save session and update coins:", err);
+			}
+		};
+
+		persistSessionAndCoins();
+
+		setShowRewards(true);
+	}, [cat?.energy, selectedProfile?.id, sessionTime, user?.uid]);
+
+	const skipToNextMode = () => {
+		stopTimer();
+
+		if (mode === "work") {
+			const nextCount = sessionCount + 1;
+			setSessionCount(nextCount);
+			finalizeWorkSession();
+			setMode(nextCount % 4 === 0 ? "longbreak" : "break");
+			return;
+		}
+
+		setMode("work");
+	};
+
+	useEffect(() => {
+		if (!isRunning) return;
+
+		const interval = setInterval(() => {
+			const remaining = Math.max(
+				0,
+				endTime - (Date.now() - sessionTime.pausedTime),
+			);
+
+			setRemainingSeconds(Math.ceil(remaining / 1000));
+
+			if (remaining <= 0) {
+				stopTimer();
+
+				if (mode === "work") {
+					const nextCount = sessionCount + 1;
+					setSessionCount(nextCount);
+					finalizeWorkSession();
+					setMode(nextCount % 4 === 0 ? "longbreak" : "break");
+				} else {
+					setMode("work");
+				}
+			}
+		}, 250);
+
+		return () => clearInterval(interval);
+	}, [isRunning, endTime, mode, sessionCount, sessionTime.pausedTime, finalizeWorkSession]);
+
+	useEffect(() => {
+		const raw = selectedProfile?.timeon;
+		if (raw == null) return;
+
+		const minutes = Number(raw);
+		if (!Number.isFinite(minutes)) return;
+
+		setItems((prev) => {
+			if (prev.timer?.minutes === minutes && prev.timer?.seconds === 0)
+				return prev;
+			return { ...prev, timer: { minutes, seconds: 0 } };
+		});
+	}, [selectedProfile]);
+
+	const refreshProfiles = async () => {
+		if (!user?.uid) return;
+
+		const results = await fetch(`/api/pomodoro_profiles/${user.uid}`);
+		const data = await results.json();
+
+		setSelectedProfile(data[0]);
+		setAllProfiles(data);
+	};
+
+	const refreshCat = async () => {
+		if (!user?.uid) return;
+
+		const results = await fetch(`/api/cats/${user.uid}`);
+		const data = await results.json();
+
+		setCat(data?.[0] ?? null);
+	};
+
+	const completeSession = async () => {
+		setShowRewards(false);
+		setSessionTime({
+			startTime: null,
+			endTime: null,
+			pausedTime: 0,
+			pauseStartTime: null,
+		});
+		setRewardMinutes(0);
+	}
+
+	useEffect(() => {
+		refreshProfiles();
+		refreshCat();
+	}, [user]);
+
+	useEffect(() => {
+		const durations = getDurations(selectedProfile);
+		if (!durations) return;
+
+		const minutes = durations[mode];
+		if (!Number.isFinite(minutes)) return;
+
+		setRemainingSeconds(minutes * 60);
+	}, [selectedProfile, mode]);
+
+	useEffect(() => {
+		console.log("Reward Minutes:" , rewardMinutes)
+	}, [rewardMinutes])
 
 	return (
 		<Box
@@ -119,7 +369,6 @@ export default function VirtualRoom() {
 				width: "80vw",
 				maxWidth: 1000,
 				margin: "0 auto",
-				pt: 15
 			}}
 		>
 			{/* Room canvas */}
@@ -150,45 +399,143 @@ export default function VirtualRoom() {
 				<Slot label="Floor Item 1" sx={slots.floor1} />
 				<Slot label="Floor Item 2" sx={slots.floor2} />
 				<Slot label="Wall Item" sx={slots.wall} item={items.wall} />
-				<Box sx={slots.timer}>
-					<Typography
-						variant="h2"
+				<Stack spacing={5}>
+					<Card sx={{ ...slots.timer, overflow: "visible" }} elevation={0}>
+						<Badge
+							badgeContent={sessionCount}
+							showZero
+							color="primary"
+							sx={{
+								position: "absolute",
+								top: 8,
+								right: 25,
+								zIndex: 2,
+							}}
+						>
+							<Box sx={{ width: 1, height: 1 }} />
+						</Badge>
+						<Typography
+							variant="caption"
+							sx={{ position: "absolute", top: 6, color: "#FFFFFF" }}
+						>
+							{mode == "longbreak" ? "LONG BREAK" : mode.toUpperCase()}
+						</Typography>
+						{selectedProfile?.timeon != null && (
+							<Bounce>
+								<Stack>
+									<Typography
+										variant="h2"
+										sx={{
+											color: "common.white",
+											fontSize: {
+												xs: "1.2rem",
+												sm: "1.8rem",
+												md: "2.5rem",
+												lg: "3rem",
+											},
+										}}
+									>
+										{Math.floor(remainingSeconds / 60)}:
+										{String(remainingSeconds % 60).padStart(2, "0")}
+									</Typography>
+								</Stack>
+							</Bounce>
+						)}
+					</Card>
+
+					{/* FAB to open Tasks */}
+					<Fab
+						color="primary"
+						aria-label="tasks"
+						onClick={() => setIsTasksOpen(true)}
 						sx={{
-							color: "common.white",
-							fontSize: {
-								xs: "1.2rem",
-								sm: "1.8rem",
-								md: "2.5rem",
-								lg: "3rem",
+							position: "absolute",
+							left: "5%",
+							top: "5%",
+							zIndex: 20,
+							width: { xs: 40, sm: 56, md: 64 },
+							height: { xs: 40, sm: 56, md: 64 },
+							"& .MuiSvgIcon-root": {
+								fontSize: { xs: "1rem", sm: "1.5rem", md: "2rem" },
 							},
 						}}
 					>
-						{formatTime(items.timer.minutes)}:{formatTime(items.timer.seconds)}
-					</Typography>
-				</Box>
+						<PlaylistAddCheckIcon />
+					</Fab>
 
-				{/* FAB to open Tasks */}
-				<Fab
-					color="primary"
-					aria-label="tasks"
-					onClick={() => setIsTasksOpen(true)}
-					sx={{
-						position: "absolute",
-						left: "5%",
-						top: "5%",
-						zIndex: 20,
-                        width: { xs: 40, sm: 56, md: 64 },
-                        height: { xs: 40, sm: 56, md: 64 },
-                        "& .MuiSvgIcon-root": {
-                            fontSize: { xs: "1rem", sm: "1.5rem", md: "2rem" },
-                        },
-					}}
-				>
-					<PlaylistAddCheckIcon />
-				</Fab>
+					<Stack
+						direction="row"
+						spacing={2}
+						sx={{
+							position: "absolute",
+							left: "50%",
+							top: "35%",
+							zIndex: 20,
+							transform: "translate(-50%, -50%)",
+							"& .MuiSvgIcon-root": {
+								fontSize: { xs: "1rem", sm: "1.5rem", md: "2rem" },
+							},
+						}}
+					>
+						<Fab
+							color="primary"
+							sx={{
+								width: { xs: 30, sm: 46, md: 54 },
+								height: { xs: 30, sm: 46, md: 54 },
+							}}
+							onClick={() => setIsProfilesOpen(true)}
+						>
+							<SettingsIcon />
+						</Fab>
+						<Fab
+							color="primary"
+							sx={{
+								width: { xs: 30, sm: 46, md: 54 },
+								height: { xs: 30, sm: 46, md: 54 },
+							}}
+							onClick={() => {
+								isRunning ? pauseTimer() : startTimer();
+							}}
+						>
+							{isRunning ? <PauseIcon /> : <PlayArrowIcon />}
+						</Fab>
+						{isRunning && (
+							<Bounce>
+								<Fab
+									color="primary"
+									sx={{
+										width: { xs: 30, sm: 46, md: 54 },
+										height: { xs: 30, sm: 46, md: 54 },
+									}}
+									onClick={skipToNextMode}
+								>
+									<SkipNextIcon />
+								</Fab>
+							</Bounce>
+						)}
+					</Stack>
+				</Stack>
 
 				{/* Controlled Drawer */}
 				<TasksDrawer open={isTasksOpen} onClose={() => setIsTasksOpen(false)} />
+
+				{/* Profile Options Drawer */}
+				<ProfilesDrawer
+					open={isProfilesOpen}
+					onClose={() => setIsProfilesOpen(false)}
+					profiles={allProfiles}
+					onProfilesChanged={refreshProfiles}
+					selectedProfile={selectedProfile}
+					setSelectedProfile={setSelectedProfile}
+				/>
+
+				<RewardModal
+					open={showRewards}
+					onClose={completeSession}
+					minutes={rewardMinutes}
+					tasks={0}
+					cat={cat}
+				/>
 			</Box>
 		</Box>
 	);
