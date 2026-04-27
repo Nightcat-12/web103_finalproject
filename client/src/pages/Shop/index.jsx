@@ -1,122 +1,163 @@
 import {
-    Button,
-    Stack,
-    Paper,
-    Grid,
-    Typography,
-    Box,
-    Container,
-    CircularProgress
+	Button,
+	Stack,
+	Paper,
+	Grid,
+	Typography,
+	Box,
+	Container,
+	CircularProgress,
 } from "@mui/material";
 
+import StoreIcon from "@mui/icons-material/Store";
 import ShopCard from "../../components/ShopCard.jsx";
-import { useState, useEffect } from "react";
+import { useContext, useState, useEffect } from "react";
+import { AttentionSeeker } from "react-awesome-reveal";
+import PawCoin from "../../components/PawCoin.jsx";
+import AuthContext from "../../contexts/AuthContext";
 
 export default function Shop() {
+	const [shopItems, setShopItems] = useState([]);
+	const [activeFilter, setActiveFilter] = useState(null);
+	const [loading, setLoading] = useState(true);
+	const [coins, setCoins] = useState();
 
-    const [shopItems, setShopItems] = useState([])
-    const [filteredShopItems, setFilteredShopItems] = useState([])
-    const [activeFilter, setActiveFilter] = useState(null)
-    const [loading, setLoading] = useState(true)
+	const { user } = useContext(AuthContext);
 
-    useEffect(() => {
-        const fetchShopItems = async() => {
-            try {
+	useEffect(() => {
+		const fetchShopItems = async () => {
+			try {
+				const res = await fetch("/api/shop_items");
+				const data = await res.json();
+				setShopItems(data);
+			} catch (err) {
+				console.error(err);
+			} finally {
+				setLoading(false);
+			}
+		};
 
-                const res = await fetch('/api/shop_items')
-                const data = await res.json()
-                setShopItems(data)
-            } catch (err) {
-                console.error(err)
-            } finally {
-                setLoading(false)
-            }
-        }
+		fetchShopItems();
+	}, []);
 
-        fetchShopItems()
-    }, [])
+	useEffect(() => {
+		const fetchUserCoins = async () => {
+			if (!user?.uid) {
+				setCoins(0);
+				return;
+			}
 
-    var lamps = shopItems.filter(e => e.category == 'Lamps')
-    var desks = shopItems.filter(e => e.category == 'Desks')
-    var plants = shopItems.filter(e => e.category == 'Plants')
+			try {
+				const response = await fetch(`/api/users/${user.uid}`);
+				if (!response.ok) {
+					throw new Error(`Failed to fetch user coins (${response.status})`);
+				}
 
-    function filterByLamps() {
-        setFilteredShopItems(lamps)
-    }
+				const data = await response.json();
+				setCoins(Number(data?.coins ?? 0));
+			} catch (err) {
+				console.error(err);
+				setCoins(0);
+			}
+		};
 
-    function filterByDesks() {
-        setFilteredShopItems(desks)
-    }
+		fetchUserCoins();
+	}, [user?.uid]);
 
-    function filterByPlants() {
-        setFilteredShopItems(plants)
-    }
-    
-    function handleFilterClick(category) {
-        if (activeFilter === category) {
-            setActiveFilter(null)
-        }
-        else {
-            setActiveFilter(category)
-        }
-    }
+	function handleFilterClick(category) {
+		if (activeFilter === category) {
+			setActiveFilter(null);
+		} else {
+			setActiveFilter(category);
+		}
+	}
 
-    const displayShopItems = activeFilter ? shopItems.filter(e => e.category === activeFilter) : shopItems
+	const displayShopItems = activeFilter
+		? shopItems.filter((e) => e.category === activeFilter)
+		: shopItems;
 
-    return (
-        <Box sx={{ pt: 4, pb: 10, px: { xs: 2, sm: 3, md: 4 } }}>
-           {/* title of the page + filter buttons based on categories */}
-           <Box sx={{ pb: 5 }}>
-                <Stack spacing={2} direction={{ xs: 'column', md: 'row' }} 
-                    sx={{ 
-                        justifyContent: { xs: 'flex-start', md: 'space-between'}, 
-                        alignItems: {xs: 'flex-start', md: 'center'},
-                    }}
-                >
-                    <Typography variant="h2" sx={{ paddingLeft: 4 }}>
-                       ⋆˚꩜｡ PawMart ⋆˚꩜｡
-                    </Typography>
-                    <Box sx={{ 
-                        alignContent:'center', 
-                        display: 'flex',
-                        flexDirection: 'row-reverse',
-                        gap: 1,
-                        p: 2,
-                        m: 2,
-                        }}
-                    >
-                        <Button
-                            variant= {activeFilter === 'Lamps' ? 'contained': 'outlined'} 
-                            onClick={() => handleFilterClick('Lamps')}
-                        >Lamps</Button>
-                        <Button
-                            variant= {activeFilter === 'Desks' ? 'contained': 'outlined'} 
-                            onClick={() => handleFilterClick('Desks')}
-                        >Desks</Button>
-                        <Button 
-                            variant= {activeFilter === 'Plants' ? 'contained': 'outlined'} 
-                            onClick={() => handleFilterClick('Plants')}
-                        >Plants</Button>                        
-                    </Box>
-
-                </Stack>               
-            </Box>
-            {/* displaying data on grid format, all shop items on display unless a filter button is clicked */}
-            <Box sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
-                {loading ? (
-                    <Box sx={{ display: "flex", justifyContent: 'center', pt: 25 }}>
-                        <CircularProgress size={100}/>
-                    </Box>
-                ) : (
-                    <Grid container spacing={2} sx={{ width: '100%' }}>
-                        {displayShopItems.map(shopItem => (
-                            <Grid key={shopItem.id} size={{ xs: 12, sm: 6, md:3, lg: 2}}>
-                                <ShopCard shopItem={shopItem}/>
-                            </Grid>
-                        ))}
-                    </Grid>                      
-                )}
-            </Box>
-        </Box>
-    )
+	return (
+		<Box sx={{ pt: 4, pb: 10, px: { xs: 2, sm: 3, md: 4 } }}>
+			{/* title of the page + filter buttons based on categories */}
+			<Box sx={{ pb: 5 }}>
+				<Stack
+					spacing={2}
+					direction={{ xs: "column", md: "row" }}
+					sx={{
+						justifyContent: { xs: "flex-start", md: "space-between" },
+						alignItems: { xs: "flex-start", md: "center" },
+					}}
+				>
+					<Typography variant="h2" sx={{ paddingLeft: 5 }}>
+						<StoreIcon
+							sx={{
+								fontSize: 70,
+								color: "primary.main",
+								position: "relative",
+								top: "10px",
+							}}
+						/>
+						PawMart
+					</Typography>
+					<Box
+						sx={{
+							alignContent: "center",
+							display: "flex",
+							flexDirection: "row-reverse",
+							gap: 1,
+							p: 2,
+							m: 2,
+						}}
+					>
+						<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+							<AttentionSeeker effect="tada">
+								<PawCoin />
+							</AttentionSeeker>
+							<Typography> x {coins}</Typography>
+						</Stack>
+						<Button
+							variant={activeFilter === "Lamps" ? "contained" : "outlined"}
+							onClick={() => handleFilterClick("Lamps")}
+						>
+							Lamps
+						</Button>
+						<Button
+							variant={activeFilter === "Desks" ? "contained" : "outlined"}
+							onClick={() => handleFilterClick("Desks")}
+						>
+							Desks
+						</Button>
+						<Button
+							variant={activeFilter === "Plants" ? "contained" : "outlined"}
+							onClick={() => handleFilterClick("Plants")}
+						>
+							Plants
+						</Button>
+						<Button
+							variant={activeFilter === "Frames" ? "contained" : "outlined"}
+							onClick={() => handleFilterClick("Frames")}
+						>
+							Frames
+						</Button>
+					</Box>
+				</Stack>
+			</Box>
+			{/* displaying data on grid format, all shop items on display unless a filter button is clicked */}
+			<Box sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
+				{loading ? (
+					<Box sx={{ display: "flex", justifyContent: "center", pt: 25 }}>
+						<CircularProgress size={100} />
+					</Box>
+				) : (
+					<Grid container spacing={2} sx={{ width: "100%" }}>
+						{displayShopItems.map((shopItem) => (
+							<Grid key={shopItem.id} size={{ xs: 12, sm: 6, md: 3, lg: 2 }}>
+								<ShopCard shopItem={shopItem} />
+							</Grid>
+						))}
+					</Grid>
+				)}
+			</Box>
+		</Box>
+	);
 }

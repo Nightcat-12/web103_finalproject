@@ -19,7 +19,7 @@ export default function ShopCard({ shopItem }){
                 maxWidth: 345, 
                 border: "2px solid #e0e0e0",
                 borderRadius: 5,
-                backgroundColor: "transparent",
+                backgroundColor: "white",
                 transition: "all 0.4s ease",
                 '&:hover': { 
                     borderColor: 'primary.main',
@@ -51,7 +51,7 @@ export default function ShopCard({ shopItem }){
                     width: '100%',
                     p: 1,
                     boxSizing: 'border-box',
-                    backgroundColor: 'transparent',
+                    backgroundColor: 'white',
                 }}
             />
             <CardContent>
