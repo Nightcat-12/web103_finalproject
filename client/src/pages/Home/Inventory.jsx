@@ -1,4 +1,4 @@
-import { Drawer, Typography, Box, IconButton, Divider } from "@mui/material";
+import { Drawer, Typography, Box, IconButton, Divider, Button } from "@mui/material";
 import { useState, useEffect, useContext } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import AuthContext from "../../contexts/AuthContext"; // ✅ get current user
@@ -72,11 +72,11 @@ function ItemCard({ item, selected, onClick }) {
   );
 }
 
-export default function Inventory({ open, onClose }) {
+export default function Inventory({ open, onClose, initialFilter = "All", allowedCategories = [], activeSlot = null }) {
   const { user } = useContext(AuthContext);        //  current user
   const [shopItems, setShopItems] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [filter, setFilter] = useState("All");
+  const [filter, setFilter] = useState(initialFilter);
   const [loading, setLoading] = useState(false);  //  loading state
   const [error, setError] = useState(null);        //  error state
 
@@ -89,28 +89,119 @@ export default function Inventory({ open, onClose }) {
       setLoading(true);
       setError(null);
       try {
-        
-        const res = await fetch(`/api/inventory/${user.uid}`); // ✅ real API call per user
-        
+        const res = await fetch(`/api/inventory/${user.uid}`);
         if (!res.ok) throw new Error("Failed to fetch inventory");
         const data = await res.json();
-        
         setShopItems(data);
       } catch (err) {
-        
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
+    setFilter(initialFilter);
     fetchInventory();
-  }, [open, user?.uid]); // ✅ re-fetch when drawer opens or user changes
+  }, [open, user?.uid, initialFilter, allowedCategories]); // ✅ re-fetch when drawer opens or user changes
 
-  const categories = ["All", ...new Set(shopItems.map((i) => i.category))];
+  // expose a refresh function so other handlers can call it
+  const refreshInventory = async () => {
+    if (!user?.uid) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/inventory/${user.uid}`);
+      if (!res.ok) throw new Error("Failed to fetch inventory");
+      const data = await res.json();
+      setShopItems(data);
+      return data;
+    } catch (err) {
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filtered =
-    filter === "All" ? shopItems : shopItems.filter((i) => i.category === filter);
+  const handleEquipToggle = async (item) => {
+    if (!item) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const nextEquipped = !item.equipped;
+
+      // If equipping, first unequip others in the same category
+      if (nextEquipped) {
+        const others = shopItems.filter(
+          (i) => i.category === item.category && i.equipped && i.id !== item.id,
+        );
+        const unequippedItems = await Promise.all(
+          others.map((o) =>
+            fetch(`/api/inventory/${o.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ equipped: false }),
+            }),
+          ),
+        );
+
+        const failedUnequip = unequippedItems.find((response) => !response.ok);
+        if (failedUnequip) {
+          throw new Error("Failed to unequip item");
+        }
+      }
+
+      // Toggle selected item
+      const res = await fetch(`/api/inventory/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ equipped: nextEquipped }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.error || "Failed to update item");
+      }
+
+      // Refresh local inventory and selected item
+      const latestInventory = await refreshInventory();
+      const updated = await res.json();
+      setSelected(updated);
+
+      // notify others (VirtualRoom) with the updated inventory snapshot so it can render immediately
+      try {
+        window.dispatchEvent(
+          new CustomEvent("inventoryUpdated", {
+            detail: {
+              item: updated,
+              inventory: latestInventory ?? [],
+              slot: activeSlot,
+              equipped: updated?.equipped ?? nextEquipped,
+            },
+          }),
+        );
+      } catch {
+        /* ignore */
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const categories = allowedCategories && allowedCategories.length > 0
+    ? allowedCategories.length > 1 
+      ? ["All", ...allowedCategories] 
+      : allowedCategories
+    : ["All", ...new Set(shopItems.map((i) => i.category))];
+
+  const filtered = allowedCategories?.length > 0
+    ? filter === "All"
+      ? shopItems.filter((i) => allowedCategories.includes(i.category))
+      : shopItems.filter((i) => i.category === filter && allowedCategories.includes(i.category))
+    : filter === "All"
+      ? shopItems
+      : shopItems.filter((i) => i.category === filter);
 
   const handleSelect = (item) => {
     setSelected((prev) => (prev?.id === item.id ? null : item));
@@ -388,31 +479,21 @@ export default function Inventory({ open, onClose }) {
               </Typography>
             </Box>
 
-            <Box
+            <Button
+              disabled={loading}
+              onClick={() => handleEquipToggle(selected)}
+              variant={selected?.equipped ? "outlined" : "contained"}
+              color={selected?.equipped ? "secondary" : "primary"}
               sx={{
                 mt: "auto",
                 py: 1,
-                border: "1px solid #065f46",
                 borderRadius: "6px",
-                textAlign: "center",
-                cursor: "pointer",
-                background: "#065f4655",
-                "&:hover": { background: "#065f46aa" },
-                transition: "background 0.15s",
+                textTransform: "uppercase",
+                fontWeight: 700,
               }}
             >
-              <Typography
-                sx={{
-                  fontSize: "0.7rem",
-                  color: "#34d399",
-                  fontWeight: 700,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Equipped
-              </Typography>
-            </Box>
+              {selected?.equipped ? "Unequip" : "Equip"}
+            </Button>
           </Box>
         )}
       </Box>
