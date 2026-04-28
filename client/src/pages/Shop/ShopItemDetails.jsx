@@ -1,16 +1,29 @@
-import { Box, Stack, Typography, Button, IconButton,} from "@mui/material"
+import { Box, Stack, Typography, Button, IconButton, Snackbar } from "@mui/material"
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 import { useEffect, useState } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { green } from "@mui/material/colors"
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CircularProgress from "@mui/material/CircularProgress"
+import BuyButton from '../../components/BuyButton'
+import PawCoin from '../../components/PawCoin'
 
 export default function ShopItemDetails() {
 
     const { id } = useParams()
     const navigate = useNavigate()
+    const location = useLocation()
     const [item, setItem] = useState(null)
+    const [feedback, setFeedback] = useState({ open: false, message: '', severity: 'success' })
+    const [coins, setCoins] = useState(location?.state?.coins ?? 0)
+
+    useEffect(() => {
+        const onCoinsUpdated = (e) => {
+            if (e?.detail?.coins != null) setCoins(Number(e.detail.coins))
+        }
+        window.addEventListener('userCoinsUpdated', onCoinsUpdated)
+        return () => window.removeEventListener('userCoinsUpdated', onCoinsUpdated)
+    }, [])
 
     useEffect(() => {
         const fetchShopItemDetails = async () => {
@@ -83,17 +96,26 @@ export default function ShopItemDetails() {
                 <Typography variant="body1" color="text.secondary" >
                     Category: {item.category}
                 </Typography>
+                <Stack direction="row" spacing={1} sx={{alignItems: "center"}}>
+                    <PawCoin />
+                    <Typography variant="body1">{coins ?? 0}</Typography>
+                </Stack>
                 <Typography variant="h3" fontWeight="bold" sx={{ color: "#3d8ddd" }}>
                     ${item.price}
                 </Typography>
-                <Button
-                    variant="contained"
+                <BuyButton
+                    shopItemId={item.id}
                     size="large"
-                    startIcon={<ShoppingCartIcon />}
                     sx={{ mt: 2, px: 4, py: 1.5 }}
-                >
-                    Buy
-                </Button>
+                    onSuccess={() => setFeedback({ open: true, message: 'Added to inventory', severity: 'success' })}
+                    onError={(err) => setFeedback({ open: true, message: err?.message || 'Failed to add', severity: 'error' })}
+                />
+                <Snackbar
+                    open={feedback.open}
+                    autoHideDuration={3000}
+                    onClose={() => setFeedback((s) => ({ ...s, open: false }))}
+                    message={feedback.message}
+                />
             </Stack>
 
         </Stack>

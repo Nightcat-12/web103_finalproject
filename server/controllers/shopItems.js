@@ -12,7 +12,7 @@ const getAllShopItems = async(req, res) => {
 
 const getShopItemById = async (req, res) => {
     try {
-        const selectQuery = `SELECT name, category, price, image FROM shop_items WHERE id = $1`
+        const selectQuery = `SELECT id, name, category, price, image FROM shop_items WHERE id = $1`
         const shopItemId = req.params.shopItemId
 
         const result = await pool.query(selectQuery, [shopItemId])

@@ -10,6 +10,7 @@ import inventoryRoutes from './routes/inventory.js'
 import sessionsRoutes from './routes/studySessions.js'
 import tasksRoutes from './routes/tasks.js'
 import { getFirebaseAdminAuth } from './config/firebaseAdmin.js'
+import { initializeDatabase } from './config/initialize.js'
 
 // import the router from your routes file
 
@@ -97,6 +98,9 @@ app.use('/api/shop_items', shopItemsRoutes)
 app.use('/api/inventory', inventoryRoutes)
 app.use('/api/sessions', sessionsRoutes)
 app.use('/api/tasks', tasksRoutes)
+
+// Initialize database (create tables and seed data if needed)
+await initializeDatabase()
 
 await checkFirebaseAdminHealth()
 
