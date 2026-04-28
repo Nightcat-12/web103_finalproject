@@ -751,7 +751,7 @@ export default function VirtualRoom({ initialProfile = null }) {
 			{isLoadingRoom && (
 				<Box
 					sx={{
-						position: "fixed",
+						position: "absolute",
 						inset: 0,
 						zIndex: 2000,
 						display: "flex",
