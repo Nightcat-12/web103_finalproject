@@ -1,6 +1,73 @@
 import { pool } from '../config/database.js'
 import { getFirebaseAdminAuth } from '../config/firebaseAdmin.js'
 
+// Compute and equip the cheapest item in each starter category for a new user.
+export const initializeDefaultInventory = async (userId) => {
+    if (!userId) throw new Error('userId is required')
+
+    const categories = ['Desks', 'Lamps', 'Plants', 'Frames']
+
+    try {
+        console.log('[UsersController] Starting default inventory initialization for user:', userId)
+
+        // Start transaction so we either equip all starter items, or none.
+        await pool.query('BEGIN')
+
+        const equipped = []
+
+        for (const category of categories) {
+            try {
+                const cheapestRes = await pool.query(
+                    'SELECT id FROM shop_items WHERE category = $1 ORDER BY price ASC LIMIT 1',
+                    [category],
+                )
+
+                if (cheapestRes.rows.length === 0) {
+                    console.warn(`[UsersController] No shop items found for category: ${category}`)
+                    continue
+                }
+
+                const shopItemId = cheapestRes.rows[0].id
+
+                console.log(`[UsersController] Equipping cheapest ${category} item id ${shopItemId} for user ${userId}`)
+
+                const insertRes = await pool.query(
+                    `INSERT INTO inventory (userId, shopItemId, quantity, equipped)
+                     VALUES ($1, $2, 1, TRUE)
+                     ON CONFLICT (userId, shopItemId)
+                     DO UPDATE SET equipped = TRUE
+                     RETURNING *`,
+                    [userId, shopItemId],
+                )
+
+                if (insertRes.rows[0]) equipped.push({ shopItemId, row: insertRes.rows[0] })
+            } catch (catErr) {
+                console.error('[UsersController] Error equipping starter item for category', category, catErr)
+                throw catErr
+            }
+        }
+
+        await pool.query('COMMIT')
+
+        console.log('[UsersController] Default inventory initialization completed successfully for user:', userId)
+        return equipped
+    } catch (err) {
+        try {
+            await pool.query('ROLLBACK')
+        } catch (rbErr) {
+            /* ignore rollback errors */
+        }
+
+        console.error('[UsersController] Failed to initialize default inventory:', {
+            userId,
+            error: err?.message,
+            stack: err?.stack,
+        })
+
+        throw err
+    }
+}
+
 const getUser = async(req, res) => {
 
     try {
@@ -56,9 +123,49 @@ const signInUser = async(req, res) => {
                 traceId,
                 uid: results.rows[0].uid,
             })
+
+            // Initialize default inventory for new user
+            try {
+                await initializeDefaultInventory(uid)
+                console.log('[UsersController] Default inventory initialized', {
+                    traceId,
+                    uid,
+                })
+            } catch (err) {
+                console.error('[UsersController] Failed to initialize default inventory', {
+                    traceId,
+                    uid,
+                    error: err.message,
+                })
+                // Don't fail the sign-in if inventory initialization fails
+            }
+
+            // Fetch inventory for the user and include it in the response so the client
+            // can immediately update UI without an extra fetch.
+            const inventoryQuery = `
+                SELECT
+                    i.id            AS id,
+                    i.userId        AS userid,
+                    i.shopItemId    AS shopitemid,
+                    i.quantity      AS quantity,
+                    i.equipped      AS equipped,
+                    i.acquiredAt    AS acquiredat,
+                    s.name          AS name,
+                    s.image         AS image,
+                    s.category      AS category,
+                    s.price         AS price
+                FROM inventory i
+                JOIN shop_items s ON s.id = i.shopItemId
+                WHERE i.userId = $1
+                ORDER BY i.acquiredAt DESC
+            `;
+
+            const invRes = await pool.query(inventoryQuery, [uid]);
+
             return res.json({
                 newUser: true,
-                user: results.rows[0]
+                user: results.rows[0],
+                inventory: invRes.rows,
             })
         } else {
             console.log('[UsersController] User already exists, selecting existing row', {
@@ -74,10 +181,31 @@ const signInUser = async(req, res) => {
                 traceId,
                 rowCount: existingUser.rows.length,
             })
+            // Fetch inventory for existing user as well
+            const inventoryQuery = `
+                SELECT
+                    i.id            AS id,
+                    i.userId        AS userid,
+                    i.shopItemId    AS shopitemid,
+                    i.quantity      AS quantity,
+                    i.equipped      AS equipped,
+                    i.acquiredAt    AS acquiredat,
+                    s.name          AS name,
+                    s.image         AS image,
+                    s.category      AS category,
+                    s.price         AS price
+                FROM inventory i
+                JOIN shop_items s ON s.id = i.shopItemId
+                WHERE i.userId = $1
+                ORDER BY i.acquiredAt DESC
+            `;
+
+            const invRes = await pool.query(inventoryQuery, [uid]);
 
             return res.json({
                 newUser: false,
-                user: existingUser.rows[0]
+                user: existingUser.rows[0],
+                inventory: invRes.rows,
             })
         }
 

@@ -9,7 +9,7 @@ import Box from "@mui/material/Box";
 
 import { useNavigate } from "react-router-dom";
 
-export default function ShopCard({ shopItem }){
+export default function ShopCard({ shopItem, coins }){
 
     const navigate = useNavigate();
 
@@ -38,7 +38,7 @@ export default function ShopCard({ shopItem }){
                     }
                 }
             }}>
-        <CardActionArea onClick={() => navigate(`/shop/${shopItem.id}`)}>
+        <CardActionArea onClick={() => navigate(`/shop/${shopItem.id}`, { state: { coins } })}>
             <CardMedia
                 component="img"
                 alt={shopItem.name}

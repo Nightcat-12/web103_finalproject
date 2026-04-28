@@ -31,7 +31,7 @@ const runQueryWithRetry = async (query, label, retries = 3) => {
 	return false;
 };
 
-const createUsersTable = async () => {
+export const createUsersTable = async () => {
 	const createUsersTableQuery = `
       DROP TABLE IF EXISTS users CASCADE;
 
@@ -128,7 +128,7 @@ const createStudySessionsTable = async () => {
 	return ok;
 };
 
-const createShopItemsTable = async () => {
+export const createShopItemsTable = async () => {
 	const createShopItemsTableQuery = `
       DROP TABLE IF EXISTS shop_items CASCADE;
 
@@ -192,38 +192,40 @@ const createTasksTable = async () => {
       ON tasks (createdAt DESC);
     `;
 
-	try {
-		const res = await pool.query(createTasksTableQuery);
+	const ok = await runQueryWithRetry(createTasksTableQuery, "tasks");
+	if (ok) {
 		console.log("✅ tasks table created successfully!");
-	} catch (err) {
-		console.error(`⚠️ Error creating tasks table\n${err}`);
 	}
+
+	return ok;
 };
 
-const seedShopItemsTable = async () => {
+export const seedShopItemsTable = async () => {
 	await createShopItemsTable();
 
 	console.log("Seeding shop items");
 
-	shopItems.forEach((item) => {
-		const insertQuery = {
-			text: "INSERT INTO shop_items (name, image, category, price) VALUES ($1, $2, $3, $4)",
-		};
+	try {
+		for (const item of shopItems) {
+			const insertQuery = `
+				INSERT INTO shop_items (name, image, category, price) 
+				VALUES ($1, $2, $3, $4)
+			`;
 
-		const values = [item.name, item.img, item.category, item.price];
+			const values = [item.name, item.img, item.category, item.price];
 
-		pool.query(insertQuery, values, (err, res) => {
-			if (err) {
-				console.error("⚠️ error inserting shop item", err);
-				return;
-			}
-
+			await pool.query(insertQuery, values);
 			console.log(`✅ ${item.name} added successfully`);
-		});
-	});
+		}
+		console.log("✅ shop_items table seeded successfully!");
+		return true;
+	} catch (err) {
+		console.error("⚠️ Error seeding shop items table\n", err);
+		return false;
+	}
 };
 
-const seedDatabase = async () => {
+export const seedDatabase = async ({ closePool = true } = {}) => {
 	let hasFailures = false;
 
 	try {
@@ -246,17 +248,24 @@ const seedDatabase = async () => {
 
 		if (hasFailures) {
 			console.error("⚠️ database reset finished with failures");
-			process.exitCode = 1;
-			return;
+			if (closePool) process.exitCode = 1;
+			return false;
 		}
 
 		console.log("✅ database tables created successfully!");
+		return true;
 	} catch (err) {
 		console.error(`⚠️ Error seeding database\n${err}`);
-		process.exitCode = 1;
+		if (closePool) process.exitCode = 1;
+		return false;
 	} finally {
-		await pool.end();
+		if (closePool) {
+			await pool.end();
+		}
 	}
 };
 
-seedDatabase();
+// Auto-run only when this script is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+	await seedDatabase({ closePool: true });
+}

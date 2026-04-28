@@ -69,6 +69,33 @@ export function AuthProvider({ children }) {
 
         console.log("Is new user?: ", data.newUser)
         setIsNewUser(data.newUser)
+
+        // For new users we should clear any client-side room slot mapping that might
+        // hide the newly-equipped defaults. Then dispatch inventory event with data
+        // from the backend response (or fetch if not included).
+        try {
+          const storageKey = `pawmodoro.roomSlots:${payload.uid}`
+          if (data.newUser && typeof window !== 'undefined') {
+            localStorage.removeItem(storageKey)
+          }
+
+          // Use inventory from sign-in response if available, otherwise fetch it
+          let inventoryData = data?.inventory;
+          
+          if (!Array.isArray(inventoryData)) {
+            console.log(`[AuthTrace:${traceId}] Inventory not in sign-in response, fetching...`)
+            const invRes = await fetch(`/api/inventory/${payload.uid}`)
+            inventoryData = invRes.ok ? await invRes.json() : []
+          } else {
+            console.log(`[AuthTrace:${traceId}] Using inventory from sign-in response (${inventoryData.length} items)`)
+          }
+
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('inventoryUpdated', { detail: { inventory: inventoryData } }))
+          }
+        } catch (err) {
+          console.error(`[AuthTrace:${traceId}] failed to fetch/dispatch inventory`, err)
+        }
       }
 
       await signInOnBackend()

@@ -1,18 +1,5 @@
-import { useContext, useEffect, useState } from 'react'
-import Box from '@mui/material/Box'
 import './App.css'
-import Typography from '@mui/material/Typography'
-import Stack from '@mui/material/Stack'
-import AppBar from '@mui/material/AppBar'
-import Toolbar from '@mui/material/Toolbar'
-import ShoppingCart from '@mui/icons-material/ShoppingCart';
-import IconButton from '@mui/material/IconButton'
-import Button from '@mui/material/Button'
-import { auth, provider } from './firebase.js'
-import { onAuthStateChanged, signInWithPopup } from 'firebase/auth' // Removed getRedirectResult, GoogleAuthProvider
-import SignInWithGoogleButton from './components/SignInWithGoogleButton.jsx'
-import AuthContext from './contexts/AuthContext.js'
-import { ThemeProvider } from '@emotion/react'
+import { ThemeProvider, CssBaseline } from '@mui/material'
 import { theme } from './theme.js'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Splash from './pages/Splash/index.jsx'
@@ -24,14 +11,9 @@ import Testing from './pages/Testing/index.jsx'
 import ShopItemDetails from './pages/Shop/ShopItemDetails.jsx'
 
 function App() {
-
-  // if (loading) {
-  //   return <Typography>Loading authentication...</Typography>;
-  // }
-
-
   return (
     <ThemeProvider theme={theme}>
+      <CssBaseline />
       <BrowserRouter>
         <Routes>
           <Route path='/splash' element={<Splash/>}/>
