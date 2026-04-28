@@ -1,4 +1,4 @@
-import { Drawer, Typography, Box, IconButton, Divider, Button } from "@mui/material";
+import { Drawer, Typography, Box, IconButton } from "@mui/material";
 import { useState, useEffect, useContext } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import AuthContext from "../../contexts/AuthContext"; // ✅ get current user
@@ -7,10 +7,13 @@ import AuthContext from "../../contexts/AuthContext"; // ✅ get current user
 const FALLBACK_INVENTORY_IMAGE = "/patternSopItems.svg";
 const INVENTORY_HEADER_BADGE = "/patternSopItems.svg";
 
-const INVENTORY_BG = "#e0e0e0";
-const INVENTORY_BORDER = "#bdbdbd";
-const INVENTORY_TEXT = "#212121";
-const INVENTORY_MUTED = "#616161";
+const INVENTORY_BG = "rgb(253, 246, 235)";
+const INVENTORY_SURFACE = "rgba(255, 255, 255, 0.86)";
+const INVENTORY_BORDER = "rgba(74, 59, 30, 0.14)";
+const INVENTORY_TEXT = "#4a3b1e";
+const INVENTORY_MUTED = "#706763";
+const INVENTORY_SOFT = "rgba(252, 116, 116, 0.12)";
+const INVENTORY_HIGHLIGHT = "#FC7474";
 
 function itemImageSrc(item) {
   const url = item?.image ?? item?.img;
@@ -25,12 +28,13 @@ function ItemCard({ item, selected, onClick }) {
         position: "relative",
         width: 80,
         height: 80,
-        border: `2px solid ${selected ? "#60a5fa" : "#1e1e30"}`,
-        borderRadius: "6px",
-        background: selected
-          ? "radial-gradient(circle at center, #1e3a5fcc, #0d0d14)"
-          : "radial-gradient(circle at center, #1a1a2e, #0d0d14)",
-        boxShadow: selected ? "0 0 8px rgba(96,165,250,0.5)" : "none",
+        border: `2px solid ${selected ? INVENTORY_HIGHLIGHT : INVENTORY_BORDER}`,
+        borderRadius: "12px",
+        background: selected ? INVENTORY_HIGHLIGHT : "rgba(255, 255, 255, 0.92)",
+        color: selected ? "white" : INVENTORY_TEXT,
+        boxShadow: selected
+          ? "0 10px 24px rgba(74, 59, 30, 0.12)"
+          : "0 4px 14px rgba(74, 59, 30, 0.06)",
         cursor: "pointer",
         display: "flex",
         flexDirection: "column",
@@ -38,11 +42,12 @@ function ItemCard({ item, selected, onClick }) {
         justifyContent: "center",
         overflow: "hidden",
         flexShrink: 0,
-        transition: "all 0.15s ease",
+        transition: "all 0.4s ease",
         "&:hover": {
-          border: "2px solid #60a5fa",
-          boxShadow: "0 0 8px rgba(96,165,250,0.5)",
+          borderColor: INVENTORY_HIGHLIGHT,
+          boxShadow: "0 10px 24px rgba(74, 59, 30, 0.12)",
           transform: "translateY(-2px)",
+          background: selected ? INVENTORY_HIGHLIGHT : "rgba(116, 184, 252, 0.16)",
         },
       }}
     >
@@ -64,6 +69,7 @@ function ItemCard({ item, selected, onClick }) {
           alignItems: "center",
           justifyContent: "center",
           fontSize: "1.5rem",
+          background: selected ? INVENTORY_HIGHLIGHT : "rgba(255, 255, 255, 0.92)",
         }}
       >
         🪑
@@ -75,7 +81,6 @@ function ItemCard({ item, selected, onClick }) {
 export default function Inventory({ open, onClose, initialFilter = "All", allowedCategories = [], activeSlot = null }) {
   const { user } = useContext(AuthContext);        //  current user
   const [shopItems, setShopItems] = useState([]);
-  const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState(initialFilter);
   const [loading, setLoading] = useState(false);  //  loading state
   const [error, setError] = useState(null);        //  error state
@@ -129,27 +134,6 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
     try {
       const nextEquipped = !item.equipped;
 
-      // If equipping, first unequip others in the same category
-      if (nextEquipped) {
-        const others = shopItems.filter(
-          (i) => i.category === item.category && i.equipped && i.id !== item.id,
-        );
-        const unequippedItems = await Promise.all(
-          others.map((o) =>
-            fetch(`/api/inventory/${o.id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ equipped: false }),
-            }),
-          ),
-        );
-
-        const failedUnequip = unequippedItems.find((response) => !response.ok);
-        if (failedUnequip) {
-          throw new Error("Failed to unequip item");
-        }
-      }
-
       // Toggle selected item
       const res = await fetch(`/api/inventory/${item.id}`, {
         method: "PATCH",
@@ -165,7 +149,6 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
       // Refresh local inventory and selected item
       const latestInventory = await refreshInventory();
       const updated = await res.json();
-      setSelected(updated);
 
       // notify others (VirtualRoom) with the updated inventory snapshot so it can render immediately
       try {
@@ -203,10 +186,6 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
       ? shopItems
       : shopItems.filter((i) => i.category === filter);
 
-  const handleSelect = (item) => {
-    setSelected((prev) => (prev?.id === item.id ? null : item));
-  };
-
   const TOTAL_SLOTS = Math.ceil(shopItems.length / 5) * 5 + 5;
 
   return (
@@ -214,13 +193,28 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
       open={open}
       onClose={onClose}
       anchor="bottom"
-      PaperProps={{
-        sx: {
-          background: INVENTORY_BG,
-          borderTop: `2px solid ${INVENTORY_BORDER}`,
-          borderRadius: "16px 16px 0 0",
+      sx={{
+        "& .MuiDrawer-paper": {
+          height: "80vh",
+          minHeight: "80vh",
           maxHeight: "80vh",
           overflow: "hidden",
+          boxSizing: "border-box",
+        },
+      }}
+      PaperProps={{
+        sx: {
+          background: `linear-gradient(180deg, rgba(255, 251, 245, 0.98) 0%, ${INVENTORY_BG} 100%)`,
+          borderTop: `1px solid ${INVENTORY_BORDER}`,
+          borderRadius: "24px 24px 0 0",
+          boxShadow: "0 -18px 40px rgba(74, 59, 30, 0.12)",
+          height: "80vh",
+          minHeight: "80vh",
+          maxHeight: "80vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          boxSizing: "border-box",
           fontFamily: "inherit",
         },
       }}
@@ -230,11 +224,13 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
         sx={{
           px: 3,
           pt: 2.5,
-          pb: 1.5,
+          pb: 2,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           borderBottom: `1px solid ${INVENTORY_BORDER}`,
+          background: "rgba(255, 255, 255, 0.5)",
+          backdropFilter: "blur(10px)",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -243,16 +239,16 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
             src={INVENTORY_HEADER_BADGE}
             alt=""
             aria-hidden
-            sx={{ width: 36, height: 36, objectFit: "contain", flexShrink: 0 }}
+            sx={{ width: 40, height: 40, objectFit: "contain", flexShrink: 0 }}
           />
-          <Typography sx={{ fontSize: "1.3rem" }}>🛍️</Typography>
+          <Typography sx={{ fontSize: "1.2rem" }}>🛍️</Typography>
           <Box>
             <Typography
               sx={{
                 fontWeight: 700,
-                fontSize: "1rem",
+                fontSize: "1.05rem",
                 color: INVENTORY_TEXT,
-                letterSpacing: "0.12em",
+                letterSpacing: "0.1em",
                 textTransform: "uppercase",
               }}
             >
@@ -262,7 +258,7 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
               sx={{
                 fontSize: "0.65rem",
                 color: INVENTORY_MUTED,
-                letterSpacing: "0.08em",
+                letterSpacing: "0.12em",
               }}
             >
               {loading ? "Loading..." : `${shopItems.length} items`}  {/* ✅ loading feedback */}
@@ -274,12 +270,17 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
           onClick={onClose}
           size="small"
           sx={{
-            color: INVENTORY_MUTED,
+            color: INVENTORY_TEXT,
             border: `1px solid ${INVENTORY_BORDER}`,
-            borderRadius: "6px",
+            borderRadius: "10px",
             width: 32,
             height: 32,
-            "&:hover": { color: INVENTORY_TEXT, borderColor: "#9e9e9e" },
+            backgroundColor: "rgba(255, 255, 255, 0.8)",
+            "&:hover": {
+              color: INVENTORY_HIGHLIGHT,
+              borderColor: INVENTORY_HIGHLIGHT,
+              backgroundColor: INVENTORY_SOFT,
+            },
           }}
         >
           ✕
@@ -290,11 +291,12 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
       <Box
         sx={{
           px: 3,
-          py: 1.2,
+          py: 1.25,
           display: "flex",
           gap: 1,
           overflowX: "auto",
           borderBottom: `1px solid ${INVENTORY_BORDER}`,
+          background: "rgba(255, 255, 255, 0.4)",
           "&::-webkit-scrollbar": { display: "none" },
         }}
       >
@@ -305,24 +307,29 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
               key={cat}
               onClick={() => setFilter(cat)}
               sx={{
-                px: 1.5,
-                py: 0.4,
-                borderRadius: "4px",
-                border: `1px solid ${isActive ? "#2563eb" : "#9e9e9e"}`,
+                px: 1.6,
+                py: 0.65,
+                borderRadius: "999px",
+                border: `2px solid ${isActive ? INVENTORY_HIGHLIGHT : INVENTORY_BORDER}`,
                 cursor: "pointer",
                 flexShrink: 0,
-                background: isActive ? "#ffffff" : "transparent",
-                transition: "all 0.15s",
-                "&:hover": { borderColor: "#2563eb" },
+                background: isActive ? INVENTORY_HIGHLIGHT : "#ffffff",
+                color: isActive ? "white" : INVENTORY_MUTED,
+                boxShadow: isActive ? "0 6px 18px rgba(252, 116, 116, 0.18)" : "none",
+                transition: "all 0.4s ease",
+                "&:hover": {
+                  borderColor: INVENTORY_HIGHLIGHT,
+                  background: isActive ? INVENTORY_HIGHLIGHT : "rgba(116, 184, 252, 0.16)",
+                },
               }}
             >
               <Typography
                 sx={{
                   fontSize: "0.65rem",
                   fontWeight: 600,
-                  color: isActive ? "#2563eb" : INVENTORY_MUTED,
+                  color: isActive ? "white" : INVENTORY_MUTED,
                   textTransform: "uppercase",
-                  letterSpacing: "0.08em",
+                  letterSpacing: "0.12em",
                 }}
               >
                 {cat}
@@ -332,28 +339,33 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
         })}
       </Box>
 
-      <Box sx={{ display: "flex", height: "calc(80vh - 130px)", overflow: "hidden" }}>
+      <Box sx={{ display: "flex", flex: 1, height: 0, minHeight: 0, overflow: "hidden", alignItems: "stretch" }}>
         {/* Item Grid */}
         <Box
           sx={{
             flex: 1,
+            height: "100%",
             p: 2,
             overflowY: "auto",
-            "&::-webkit-scrollbar": { width: 4 },
-            "&::-webkit-scrollbar-track": { background: INVENTORY_BG },
-            "&::-webkit-scrollbar-thumb": { background: INVENTORY_BORDER, borderRadius: 2 },
+            minHeight: 0,
+            "&::-webkit-scrollbar": { width: 6 },
+            "&::-webkit-scrollbar-track": { background: "transparent" },
+            "&::-webkit-scrollbar-thumb": {
+              background: INVENTORY_BORDER,
+              borderRadius: 999,
+            },
           }}
         >
           {/* ✅ Loading spinner */}
           {loading && (
             <Box sx={{ display: "flex", justifyContent: "center", pt: 6 }}>
-              <CircularProgress size={40} sx={{ color: "#60a5fa" }} />
+              <CircularProgress size={40} sx={{ color: INVENTORY_HIGHLIGHT }} />
             </Box>
           )}
 
           {/* ✅ Error state */}
           {error && (
-            <Typography sx={{ color: "#f87171", fontSize: "0.75rem", textAlign: "center", pt: 4 }}>
+            <Typography sx={{ color: INVENTORY_HIGHLIGHT, fontSize: "0.75rem", textAlign: "center", pt: 4 }}>
               {error}
             </Typography>
           )}
@@ -377,8 +389,8 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
                 <ItemCard
                   key={item.id}
                   item={item}
-                  selected={selected?.id === item.id}
-                  onClick={handleSelect}
+                    selected={item.equipped}
+                    onClick={handleEquipToggle}
                 />
               ))}
               {filter === "All" &&
@@ -389,113 +401,15 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
                       width: 80,
                       height: 80,
                       border: `1px dashed ${INVENTORY_BORDER}`,
-                      borderRadius: "6px",
-                      opacity: 0.4,
+                      borderRadius: "12px",
+                      background: "rgba(255, 255, 255, 0.35)",
+                      opacity: 0.75,
                     }}
                   />
                 ))}
             </Box>
           )}
         </Box>
-
-        {/* Detail Panel - unchanged */}
-        {selected && (
-          <Box
-            sx={{
-              width: 200,
-              borderLeft: `1px solid ${INVENTORY_BORDER}`,
-              p: 2.5,
-              display: "flex",
-              flexDirection: "column",
-              gap: 1.5,
-              background: "#d5d5d5",
-              flexShrink: 0,
-              overflowY: "auto",
-            }}
-          >
-            <Box
-              sx={{
-                width: "100%",
-                height: 120,
-                borderRadius: "8px",
-                overflow: "hidden",
-                border: `1px solid ${INVENTORY_BORDER}`,
-                background: "#eeeeee",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Box
-                component="img"
-                src={itemImageSrc(selected)}
-                alt={selected.name}
-                sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-                onError={(e) => { e.target.style.display = "none"; }}
-              />
-            </Box>
-
-            <Box>
-              <Typography
-                sx={{
-                  fontSize: "0.65rem",
-                  color: "#2563eb",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
-                  fontWeight: 700,
-                }}
-              >
-                {selected.category}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "0.9rem",
-                  color: INVENTORY_TEXT,
-                  fontWeight: 700,
-                  lineHeight: 1.3,
-                  mt: 0.3,
-                }}
-              >
-                {selected.name}
-              </Typography>
-            </Box>
-
-            <Divider sx={{ borderColor: INVENTORY_BORDER }} />
-
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Typography
-                sx={{ fontSize: "0.65rem", color: INVENTORY_MUTED }}
-              >
-                PRICE
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "1rem",
-                  color: "#34d399",
-                  fontWeight: 700,
-                }}
-              >
-                ${selected.price}
-              </Typography>
-            </Box>
-
-            <Button
-              disabled={loading}
-              onClick={() => handleEquipToggle(selected)}
-              variant={selected?.equipped ? "outlined" : "contained"}
-              color={selected?.equipped ? "secondary" : "primary"}
-              sx={{
-                mt: "auto",
-                py: 1,
-                borderRadius: "6px",
-                textTransform: "uppercase",
-                fontWeight: 700,
-              }}
-            >
-              {selected?.equipped ? "Unequip" : "Equip"}
-            </Button>
-          </Box>
-        )}
       </Box>
     </Drawer>
   );

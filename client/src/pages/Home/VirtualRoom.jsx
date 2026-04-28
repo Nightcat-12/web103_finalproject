@@ -8,11 +8,12 @@ import {
 	Stack,
 	Badge,
 	Tooltip,
+	CircularProgress,
 } from "@mui/material";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import TasksDrawer from "./TasksDrawer";
 import Inventory from "./Inventory";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Bounce } from "react-awesome-reveal";
 import SettingsIcon from "@mui/icons-material/Settings";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
@@ -24,7 +25,7 @@ import RewardModal from "./RewardModal";
 
 const slots = {
 	desk: {
-		bottom: "0%",
+		bottom: "5%",
 		left: "50%",
 		transform: "translate(-50%)",
 		width: "40%",
@@ -34,14 +35,14 @@ const slots = {
 		bottom: "15%",
 		left: "20%",
 		transform: "translate(-50%)",
-		width: "50%",
+		width: "30%",
 		height: "60%",
 	},
 	floor2: {
 		bottom: "15%",
-		right: "-30%",
+		right: "-10%",
 		transform: "translate(-50%)",
-		width: "50%",
+		width: "30%",
 		height: "60%",
 	},
 	wall: {
@@ -118,16 +119,16 @@ function getRoomItemsFromInventory(inventory, previous = {}, slotMap = {}) {
 		if (mappedId) {
 			const mappedItem = items.find((item) => String(item.id) === String(mappedId));
 			if (mappedItem && mappedItem.equipped) {
-				return mappedItem.image ?? mappedItem.img ?? "";
+				return mappedItem.image ?? mappedItem.img ?? null;
 			}
-			return "";
+			return null;
 		}
 
 		if (fallbackItem) {
-			return fallbackItem.image ?? fallbackItem.img ?? "";
+			return fallbackItem.image ?? fallbackItem.img ?? null;
 		}
 
-		return "";
+		return null;
 	};
 
 	const assignFloorSlot = (slotName) => {
@@ -135,16 +136,16 @@ function getRoomItemsFromInventory(inventory, previous = {}, slotMap = {}) {
 		if (mappedId) {
 			const mappedItem = floorById.get(String(mappedId));
 			return mappedItem && mappedItem.equipped
-				? mappedItem.image ?? mappedItem.img ?? ""
-				: "";
+				? mappedItem.image ?? mappedItem.img ?? null
+				: null;
 		}
 
 		if (hasFloorMapping) {
-			return "";
+			return null;
 		}
 
 		const nextItem = remainingFloorItems.shift();
-		return nextItem?.image ?? nextItem?.img ?? "";
+		return nextItem?.image ?? nextItem?.img ?? null;
 	};
 
 	return {
@@ -193,6 +194,7 @@ function Slot({ label, sx, item, onClick }) {
 							height: "100%",
 							borderRadius: 2,
 							objectFit: "contain",
+							transform: "scale(1.25)",
 							display: "flex",
 							alignItems: "center",
 							justifyContent: "center",
@@ -253,6 +255,8 @@ export default function VirtualRoom({ initialProfile = null }) {
 	const [showRewards, setShowRewards] = useState(false);
 	const [cat, setCat] = useState(null);
 	const [rewardMinutes, setRewardMinutes] = useState(0);
+	const [isTimerReady, setIsTimerReady] = useState(false);
+	const [isRoomReady, setIsRoomReady] = useState(false);
 	const [sessionTime, setSessionTime] = useState({
 		startTime: null,
 		endTime: null,
@@ -262,6 +266,11 @@ export default function VirtualRoom({ initialProfile = null }) {
 	const [completedTasks, setCompletedTasks] = useState(0);
 
 	const { user } = useContext(AuthContext);
+
+	const roomImageSources = useMemo(
+		() => [items.desk?.img, items.floor1?.img, items.floor2?.img, items.wall?.img].filter(Boolean),
+		[items.desk?.img, items.floor1?.img, items.floor2?.img, items.wall?.img],
+	);
 
 	const getDurations = (profile) => {
 		if (!profile) return null;
@@ -523,7 +532,7 @@ export default function VirtualRoom({ initialProfile = null }) {
 		const categories = categoryMap[slotName] || [];
 		setActiveSlot(slotName);
 		setAllowedCategories(categories);
-		setInventoryFilter(categories[0] || "All");
+		setInventoryFilter(slotName === "floor1" || slotName === "floor2" ? "All" : categories[0] || "All");
 		setIsInventoryOpen(true);
 	};
 
@@ -611,7 +620,43 @@ export default function VirtualRoom({ initialProfile = null }) {
 		if (!Number.isFinite(minutes)) return;
 
 		setRemainingSeconds(minutes * 60);
+		setIsTimerReady(true);
 	}, [selectedProfile, mode]);
+
+	useEffect(() => {
+		if (isRoomReady) return;
+
+		let cancelled = false;
+
+		if (roomImageSources.length === 0) {
+			setIsRoomReady(true);
+			return undefined;
+		}
+
+		setIsRoomReady(false);
+
+		Promise.all(
+			roomImageSources.map(
+				(src) =>
+					new Promise((resolve) => {
+						const image = new Image();
+						image.onload = () => resolve();
+						image.onerror = () => resolve();
+						image.src = src;
+					}),
+			),
+		).then(() => {
+			if (!cancelled) {
+				setIsRoomReady(true);
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [isRoomReady, roomImageSources]);
+
+	const isLoadingRoom = !isTimerReady || !isRoomReady;
 
 	useEffect(() => {
 		console.log("Reward Minutes:", rewardMinutes);
@@ -623,8 +668,26 @@ export default function VirtualRoom({ initialProfile = null }) {
 				width: "80vw",
 				maxWidth: 1000,
 				margin: "0 auto",
+				position: "relative",
 			}}
 		>
+			{isLoadingRoom && (
+				<Box
+					sx={{
+						position: "fixed",
+						inset: 0,
+						zIndex: 2000,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						backgroundColor: "rgba(253, 246, 235, 0.72)",
+						backdropFilter: "blur(3px)",
+					}}
+				>
+					<CircularProgress size={72} sx={{ color: "#FC7474" }} />
+				</Box>
+			)}
+
 			{/* Room canvas */}
 			<Box
 				sx={{
@@ -634,6 +697,9 @@ export default function VirtualRoom({ initialProfile = null }) {
 					backgroundColor: "red",
 					borderRadius: 4,
 					overflow: "hidden",
+					opacity: isLoadingRoom ? 0 : 1,
+					pointerEvents: isLoadingRoom ? "none" : "auto",
+					transition: "opacity 0.2s ease",
 				}}
 			>
 				{/* Background layers */}
