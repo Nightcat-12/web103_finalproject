@@ -26,8 +26,8 @@ function ItemCard({ item, selected, onClick }) {
       onClick={() => onClick(item)}
       sx={{
         position: "relative",
-        width: 80,
-        height: 80,
+        width: 100,
+        height: 100,
         border: `2px solid ${selected ? INVENTORY_HIGHLIGHT : INVENTORY_BORDER}`,
         borderRadius: "12px",
         background: selected ? INVENTORY_HIGHLIGHT : "rgba(255, 255, 255, 0.92)",
@@ -382,7 +382,7 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
               sx={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))",
-                gap: 1.5,
+                gap: 4,
               }}
             >
               {filtered.map((item) => (
@@ -398,8 +398,8 @@ export default function Inventory({ open, onClose, initialFilter = "All", allowe
                   <Box
                     key={`empty-${i}`}
                     sx={{
-                      width: 80,
-                      height: 80,
+                      width: 100,
+                      height: 100,
                       border: `1px dashed ${INVENTORY_BORDER}`,
                       borderRadius: "12px",
                       background: "rgba(255, 255, 255, 0.35)",
