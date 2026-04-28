@@ -5,7 +5,8 @@
 	"main": "server.js",
 	"scripts": {
 		"start": "nodemon --require dotenv/config server.js",
-		"reset": "cd config && node --require dotenv/config reset.js"
+		"reset": "cd config && node --require dotenv/config reset.js",
+		"test-default-inventory": "node scripts/test-default-inventory.js"
 	},
 	"keywords": [],
 	"author": "",

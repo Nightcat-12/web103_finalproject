@@ -138,12 +138,6 @@ export default function Shop() {
 							m: 2,
 						}}
 					>
-						<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-							<AttentionSeeker effect="tada">
-								<PawCoin />
-							</AttentionSeeker>
-							<Typography> x {coins}</Typography>
-						</Stack>
 						<Button
 							variant={activeFilter === "Lamps" ? "contained" : "outlined"}
 							onClick={() => handleFilterClick("Lamps")}
@@ -170,7 +164,14 @@ export default function Shop() {
 						</Button>
 					</Box>
 				</Stack>
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center", paddingLeft: 6, pt: 2 }}>
+                    <AttentionSeeker effect="tada">
+                        <PawCoin />
+                    </AttentionSeeker>
+                    <Typography> x {coins}</Typography>
+                </Stack>
 			</Box>
+            
 			{/* displaying data on grid format, all shop items on display unless a filter button is clicked */}
 			<Box sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
 				{loading ? (
