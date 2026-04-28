@@ -35,10 +35,12 @@ const slots = {
 		height: "50%",
 	},
 	catAnimation: {
-		bottom: "5%",
+		bottom: "2%",
 		left: "5%",
-		width: "18%",
+		width: "20%",
 		height: "40%",
+		objectFit: "contain",
+		transform: "scale(0.7)"
 	},
 	wall: {
 		bottom: "75%",
