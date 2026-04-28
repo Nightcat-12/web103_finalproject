@@ -34,6 +34,12 @@ const slots = {
 		width: "14%",
 		height: "50%",
 	},
+	catAnimation: {
+		bottom: "5%",
+		left: "5%",
+		width: "18%",
+		height: "40%",
+	},
 	wall: {
 		bottom: "75%",
 		right: "0%",
@@ -111,6 +117,7 @@ export default function VirtualRoom({ initialProfile = null }) {
 		floor1: { img: "" },
 		floor2: { img: "" },
 		wall: { img: "" },
+		catAnimation: { img: "" },
 		timer: {
 			minutes: 0,
 			seconds: 0,
@@ -149,6 +156,18 @@ export default function VirtualRoom({ initialProfile = null }) {
 			break: Number(profile.timebreak),
 			longbreak: Number(profile.timelongbreak),
 		};
+	};
+
+	const getCatAnimationFromImage = (image) => {
+		if (!image) return null;
+		
+		// Extract cat type from image path (e.g., "/cats/blackCat.PNG" -> "blackCat")
+		const catType = image.match(/\/([^/]+)\.PNG/i)?.[1];
+		
+		if (!catType) return null;
+		
+		// Return the corresponding GIF path
+		return `/animations/${catType}.GIF`;
 	};
 
 	const startTimer = () => {
@@ -379,6 +398,18 @@ export default function VirtualRoom({ initialProfile = null }) {
 	}
 
 	useEffect(() => {
+		if (!cat?.image) return;
+
+		const animationGif = getCatAnimationFromImage(cat.image);
+		if (animationGif) {
+			setItems((prev) => ({
+				...prev,
+				catAnimation: { img: animationGif },
+			}));
+		}
+	}, [cat?.image]);
+
+	useEffect(() => {
 		refreshProfiles();
 		refreshCat();
 	}, [refreshProfiles, refreshCat]);
@@ -432,8 +463,9 @@ export default function VirtualRoom({ initialProfile = null }) {
 				<Slot label="Desk" sx={slots.desk} item={items.desk} />
 				<Slot label="Floor Item 1" sx={slots.floor1} />
 				<Slot label="Floor Item 2" sx={slots.floor2} />
-				<Slot label="Wall Item" sx={slots.wall} item={items.wall} />
-				<Stack spacing={5}>
+			<Slot label="Wall Item" sx={slots.wall} item={items.wall} />
+			<Slot label="Cat" sx={slots.catAnimation} item={items.catAnimation} />
+			<Stack spacing={5}>
 					<Card sx={{ ...slots.timer, overflow: "visible" }} elevation={0}>
 						<Badge
 							badgeContent={sessionCount}
