@@ -15,67 +15,33 @@ export default function Home() {
 	const defaultProfileCreatedForUser = useRef(null);
 
 	useEffect(() => {
+		console.log("Cat dialog open? ", catDialogOpen);
+	}, [catDialogOpen]);
+
+	useEffect(() => {
+		let isCurrent = true; // ✅ track if this effect is still valid
+
 		const getCatInfo = async () => {
 			try {
 				const results = await fetch(`/api/cats/${user?.uid}`);
 				const data = await results.json();
 
 				console.log("Data: ", data);
-				setCatDialogOpen(data.length == 0);
-			} catch (err) {
-				console.error(err.message);
-			}
-		};
 
-		const createDefaultProfile = async () => {
-			if (!user || !isNewUser) return;
-			if (defaultProfileCreatedForUser.current === user.uid) return;
-			defaultProfileCreatedForUser.current = user.uid;
-			try {
-				console.log("Creating New Default Profile...");
-				// Check if user already has profiles (and a default) before creating
-				const existing = await fetch(`/api/pomodoro_profiles/${user.uid}`);
-				const profiles = await existing.json();
-
-				if (Array.isArray(profiles) && profiles.length > 0) {
-					// prefer an explicit default if present
-					const defaultProfile = profiles.find(
-						(p) => p.isDefault || p.isdefault || p.is_default,
-					);
-					setProfile(defaultProfile || profiles[0]);
-					return; // already has a profile, do not create
+				if (isCurrent && user) {
+					setCatDialogOpen(data.length === 0);
 				}
-
-				// No profiles exist yet — create the default
-				const options = {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						userId: user.uid,
-						name: "25/5/5 Split",
-						timeOn: 25,
-						timeBreak: 5,
-						timeLongBreak: 15,
-						isDefault: true,
-					}),
-				};
-
-				const results = await fetch(`/api/pomodoro_profiles/`, options);
-				const data = await results.json();
-
-				console.log("Created default profile:", data);
-				setProfile(Array.isArray(data) ? data[0] ?? data : data);
 			} catch (err) {
 				console.error(err.message);
-				defaultProfileCreatedForUser.current = null;
 			}
 		};
 
 		getCatInfo();
-		createDefaultProfile();
-	}, [user, isNewUser]);
+
+		return () => {
+			isCurrent = false; // ❌ invalidate old requests
+		};
+	}, [user]);
 
 	useEffect(() => {
 		console.log("Profile:", profile);
@@ -101,7 +67,11 @@ export default function Home() {
 				/>
 			)}
 
-			{user ? <VirtualRoom initialProfile={profile} /> : <CircularProgress size={100}/>}
+			{user ? (
+				<VirtualRoom initialProfile={profile} />
+			) : (
+				<CircularProgress size={100} />
+			)}
 		</Box>
 	);
 }

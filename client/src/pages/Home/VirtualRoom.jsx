@@ -45,6 +45,14 @@ const slots = {
 		width: "30%",
 		height: "60%",
 	},
+	catAnimation: {
+		bottom: "2%",
+		left: "1%",
+		width: "20%",
+		height: "40%",
+		objectFit: "contain",
+		// transform: "scale(0.7)",
+	},
 	wall: {
 		bottom: "75%",
 		right: "0%",
@@ -110,14 +118,18 @@ function getRoomItemsFromInventory(inventory, previous = {}, slotMap = {}) {
 			(item.category === "Plants" || item.category === "Lamps") &&
 			item.equipped,
 	);
-	const floorById = new Map(floorEquipped.map((item) => [String(item.id), item]));
+	const floorById = new Map(
+		floorEquipped.map((item) => [String(item.id), item]),
+	);
 	const hasFloorMapping = Boolean(slotMap.floor1 || slotMap.floor2);
 	const remainingFloorItems = [...floorEquipped];
 
 	const resolveSlotImage = (slotName, fallbackItem) => {
 		const mappedId = slotMap[slotName];
 		if (mappedId) {
-			const mappedItem = items.find((item) => String(item.id) === String(mappedId));
+			const mappedItem = items.find(
+				(item) => String(item.id) === String(mappedId),
+			);
 			if (mappedItem && mappedItem.equipped) {
 				return mappedItem.image ?? mappedItem.img ?? null;
 			}
@@ -136,7 +148,7 @@ function getRoomItemsFromInventory(inventory, previous = {}, slotMap = {}) {
 		if (mappedId) {
 			const mappedItem = floorById.get(String(mappedId));
 			return mappedItem && mappedItem.equipped
-				? mappedItem.image ?? mappedItem.img ?? null
+				? (mappedItem.image ?? mappedItem.img ?? null)
 				: null;
 		}
 
@@ -232,6 +244,7 @@ export default function VirtualRoom({ initialProfile = null }) {
 		floor1: { img: "" },
 		floor2: { img: "" },
 		wall: { img: "" },
+		catAnimation: { img: "" },
 		timer: {
 			minutes: 0,
 			seconds: 0,
@@ -264,11 +277,18 @@ export default function VirtualRoom({ initialProfile = null }) {
 		pauseStartTime: null,
 	});
 	const [completedTasks, setCompletedTasks] = useState(0);
+	const [animateCat, setAnimateCat] = useState(false);
 
 	const { user } = useContext(AuthContext);
 
 	const roomImageSources = useMemo(
-		() => [items.desk?.img, items.floor1?.img, items.floor2?.img, items.wall?.img].filter(Boolean),
+		() =>
+			[
+				items.desk?.img,
+				items.floor1?.img,
+				items.floor2?.img,
+				items.wall?.img,
+			].filter(Boolean),
 		[items.desk?.img, items.floor1?.img, items.floor2?.img, items.wall?.img],
 	);
 
@@ -280,6 +300,18 @@ export default function VirtualRoom({ initialProfile = null }) {
 			break: Number(profile.timebreak),
 			longbreak: Number(profile.timelongbreak),
 		};
+	};
+
+	const getCatAnimationFromImage = (image) => {
+		if (!image) return null;
+
+		// Extract cat type from image path (e.g., "/cats/blackCat.PNG" -> "blackCat")
+		const catType = image.match(/\/([^/]+)\.PNG/i)?.[1];
+
+		if (!catType) return null;
+
+		// Return the corresponding GIF path
+		return `/animations/${catType}.GIF`;
 	};
 
 	const startTimer = () => {
@@ -532,7 +564,11 @@ export default function VirtualRoom({ initialProfile = null }) {
 		const categories = categoryMap[slotName] || [];
 		setActiveSlot(slotName);
 		setAllowedCategories(categories);
-		setInventoryFilter(slotName === "floor1" || slotName === "floor2" ? "All" : categories[0] || "All");
+		setInventoryFilter(
+			slotName === "floor1" || slotName === "floor2"
+				? "All"
+				: categories[0] || "All",
+		);
 		setIsInventoryOpen(true);
 	};
 
@@ -548,6 +584,18 @@ export default function VirtualRoom({ initialProfile = null }) {
 			console.error("Failed to load equipped items:", err);
 		}
 	}, [user?.uid]);
+
+	useEffect(() => {
+		if (!cat?.image) return;
+
+		const animationGif = getCatAnimationFromImage(cat.image);
+		if (animationGif) {
+			setItems((prev) => ({
+				...prev,
+				catAnimation: { img: animationGif },
+			}));
+		}
+	}, [cat?.image]);
 
 	useEffect(() => {
 		refreshProfiles();
@@ -567,7 +615,10 @@ export default function VirtualRoom({ initialProfile = null }) {
 			const equipped = event?.detail?.equipped;
 
 			if (slotName && updatedItem) {
-				const nextImg = equipped === false ? "" : updatedItem.image ?? updatedItem.img ?? "";
+				const nextImg =
+					equipped === false
+						? ""
+						: (updatedItem.image ?? updatedItem.img ?? "");
 				const currentSlotMap = readRoomSlotMap(user?.uid);
 				if (equipped === false) {
 					delete currentSlotMap[slotName];
@@ -662,6 +713,32 @@ export default function VirtualRoom({ initialProfile = null }) {
 		console.log("Reward Minutes:", rewardMinutes);
 	}, [rewardMinutes]);
 
+	useEffect(() => {
+		let isAnimating = false;
+		let timeout;
+
+		const loop = () => {
+			const delay = 2000 + Math.random() * 4000;
+
+			timeout = setTimeout(() => {
+				if (!isAnimating) {
+					isAnimating = true;
+					setAnimateCat(true);
+
+					setTimeout(() => {
+						setAnimateCat(false);
+						isAnimating = false;
+						loop(); // schedule next
+					}, 800);
+				}
+			}, delay);
+		};
+
+		loop();
+
+		return () => clearTimeout(timeout);
+	}, []);
+
 	return (
 		<Box
 			sx={{
@@ -674,7 +751,7 @@ export default function VirtualRoom({ initialProfile = null }) {
 			{isLoadingRoom && (
 				<Box
 					sx={{
-						position: "fixed",
+						position: "absolute",
 						inset: 0,
 						zIndex: 2000,
 						display: "flex",
@@ -739,6 +816,42 @@ export default function VirtualRoom({ initialProfile = null }) {
 					item={items.wall}
 					onClick={() => openInventoryForSlot("wall")}
 				/>
+				<Slot
+					label={cat?.name}
+					sx={{
+						...slots.catAnimation,
+
+						"@keyframes catIdleBounce": {
+							"0%": {
+								transform: "scale(0.7, 0.7) translateY(0)",
+							},
+							"20%": {
+								transform: "scale(0.75, 0.6) translateY(0)",
+							},
+							"40%": {
+								transform: "scale(0.65, 0.8) translateY(-10%)",
+							},
+							"60%": {
+								transform: "scale(0.72, 0.65) translateY(0)",
+							},
+							"80%": {
+								transform: "scale(0.68, 0.75) translateY(-3%)",
+							},
+							"100%": {
+								transform: "scale(0.7, 0.7) translateY(0)",
+							},
+						},
+
+						"& img": {
+							transform: "scale(0.7)", // ✅ consistent resting state
+							animation: animateCat ? "catIdleBounce 0.8s ease" : "none",
+							transformOrigin: "bottom center",
+							willChange: "transform",
+						},
+					}}
+					item={items.catAnimation}
+				/>
+
 				<Stack spacing={5}>
 					<Card sx={{ ...slots.timer, overflow: "visible" }} elevation={0}>
 						<Badge
@@ -864,7 +977,7 @@ export default function VirtualRoom({ initialProfile = null }) {
 					onClose={() => setIsInventoryOpen(false)}
 					initialFilter={inventoryFilter}
 					allowedCategories={allowedCategories}
-						activeSlot={activeSlot}
+					activeSlot={activeSlot}
 				/>
 				{/* Profile Options Drawer */}
 				<ProfilesDrawer
